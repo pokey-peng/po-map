@@ -35,4 +35,12 @@ export default defineConfigWithVueTs(
   },
   oxlint.configs['flat/recommended'],
   skipFormatting,
+  {
+    name: 'app/rules',
+    rules: {
+      'no-console': 'warn',
+      'no-debugger': 'warn',
+      'vue/multi-word-component-names': 'off',
+    },
+  },
 )
