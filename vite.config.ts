@@ -32,7 +32,9 @@ export default defineConfig(({ mode, isPreview }) => {
           /\.vue\??/, // .vue
         ],
         dts: 'src/auto-imports.d.ts', // 配置文件生成位置
-        imports: ['vue', 'vue-router', 'pinia'],
+        imports: ['vue', 'vue-router', 'pinia', 'vue-i18n', '@vueuse/core'],
+        resolvers: [PrimeVueResolver()],
+        vueTemplate: true,
       }),
 
       Components({

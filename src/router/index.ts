@@ -1,13 +1,36 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
-
+import layout from '@/layout/index.vue'
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
       path: '/',
-      name: 'home',
-      component: HomeView,
+      name: 'app',
+      redirect: '/po-map',
+    },
+    {
+      path: '/po-map',
+      name: 'layout',
+      component: layout,
+      redirect: '/map',
+      children: [
+        {
+          path: '/map',
+          name: 'map',
+          component: () => import('@/components/MapContainer.vue'),
+        },
+        {
+          path: '/webgl-demo',
+          name: 'WebglDemo',
+          component: () => import('@/views/webgl/webgl-demo.vue'),
+        },
+        {
+          path: '/threejs-demo',
+          name: 'ThreejsDemo',
+          component: () => import('@/views/threejs/threejs-demo.vue'),
+        },
+      ],
     },
     {
       path: '/about',
@@ -16,11 +39,6 @@ const router = createRouter({
       // this generates a separate chunk (About.[hash].js) for this route
       // which is lazy-loaded when the route is visited.
       component: () => import('../views/AboutView.vue'),
-    },
-    {
-      path: '/map',
-      name: 'map',
-      component: () => import('@/components/MapConatiner.vue'),
     },
   ],
 })
