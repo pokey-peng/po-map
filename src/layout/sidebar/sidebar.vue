@@ -11,6 +11,7 @@ const menus = ref([
   {
     label: 'Map',
     icon: 'i-mdi-map text-green-500',
+    key: 'Map',
     items: [
       { label: 'Mapbox GL', icon: 'i-mdi-map-marker', route: '/map' },
       { label: 'webgl', icon: 'i-mdi-cube-outline', route: '/webgl-demo' },
@@ -20,6 +21,7 @@ const menus = ref([
   {
     label: 'Dashboard',
     icon: 'i-mdi-view-dashboard text-blue-500',
+    key: 'Dashboard',
     items: [
       {
         label: 'About',
@@ -29,11 +31,15 @@ const menus = ref([
     ],
   },
 ])
+const expandedKeys = ref({
+  Map: true,
+  Dashboard: false,
+})
 </script>
 
 <template>
   <aside class="p-2 shadow-lg h-full">
-    <PanelMenu :model="menus" multiple>
+    <PanelMenu :model="menus" multiple v-model:expanded-keys="expandedKeys">
       <template #item="{ item }">
         <router-link
           v-if="item.route"

@@ -2,6 +2,23 @@ import { defineConfig, presetWind3, presetIcons, presetAttributify, presetWebFon
 
 export default defineConfig({
   // ...UnoCSS options
+  shortcuts: {
+    'wh-full': 'w-full h-full',
+    'wh-screen': 'w-screen h-screen',
+    'wh-full-ab': 'w-full h-full absolute top-0 left-0',
+    'flex-center': 'flex items-center justify-center',
+  },
+  rules: [['rotate-infinte', { animation: 'rotate-infinite 1s linear infinite' }]],
+  preflights: [
+    {
+      getCSS: () => `
+        @keyframes rotate-infinite {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      `,
+    },
+  ],
   presets: [
     presetWind3({
       dark: 'class',

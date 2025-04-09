@@ -18,7 +18,7 @@ const router = createRouter({
         {
           path: '/map',
           name: 'map',
-          component: () => import('@/components/MapContainer.vue'),
+          component: () => import('@/views/mapbox/mapbox-demo.vue'),
         },
         {
           path: '/webgl-demo',

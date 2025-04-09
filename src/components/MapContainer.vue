@@ -3,6 +3,8 @@ import mapboxgl from 'mapbox-gl'
 // mapboxgl.accessToken =
 //   'pk.eyJ1IjoicG9rZXljbiIsImEiOiJja3cxZmUybjQxeGk3Mm5waDdsNWV5N3M4In0.gojToYsF2FTweJDayCScNQ'
 const yourToken = '417f7cdea0782e3941b99a29a76f99a8'
+const emits = defineEmits(['onMapLoad'])
+const isLoading = ref(true)
 onMounted(() => {
   const map = new mapboxgl.Map({
     container: 'map', // container ID
@@ -45,11 +47,13 @@ onMounted(() => {
       ],
     }, // style URL
     projection: 'globe',
-    center: [0, 0], // starting position [lng, lat]
-    zoom: 3, // starting zoom
+    center: [121.4836, 31.1857], // starting position [lng, lat]
+    zoom: 9, // starting zoom
   })
   // 添加矢量瓦片源
   map.on('load', () => {
+    emits('onMapLoad', map)
+    isLoading.value = false
     map.addSource('custom-layer', {
       type: 'vector',
       scheme: 'tms',
@@ -73,13 +77,12 @@ onMounted(() => {
       },
     })
   })
-
-  console.log('🚀 ~ :11 ~ map:', map)
 })
 </script>
 
 <template>
-  <div class="map-container w-[100%] h-[100%]" id="map"></div>
+  <IconLoading :loading="isLoading" class="wh-full-ab z-10 bg-dark" />
+  <div class="map-container wh-full bg-dark" id="map"></div>
 </template>
 
 <style lang="scss" scoped>

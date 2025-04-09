@@ -13,6 +13,7 @@ declare module 'vue' {
     IconCommunity: typeof import('./components/icons/IconCommunity.vue')['default']
     IconDocumentation: typeof import('./components/icons/IconDocumentation.vue')['default']
     IconEcosystem: typeof import('./components/icons/IconEcosystem.vue')['default']
+    IconLoading: typeof import('./components/icons/IconLoading.vue')['default']
     IconSupport: typeof import('./components/icons/IconSupport.vue')['default']
     IconTooling: typeof import('./components/icons/IconTooling.vue')['default']
     MapConatiner: typeof import('./components/MapContainer.vue')['default']
