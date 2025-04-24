@@ -20,6 +20,7 @@
     "@primeuix/themes": "^1.0.0",
     "@unocss/reset": "66.1.0-beta.7",
     "@vueuse/core": "^13.0.0",
+    "gl-matrix": "^3.4.3",
     "mapbox-gl": "^3.10.0",
     "pinia": "^3.0.1",
     "primevue": "^4.3.1",
@@ -63,5 +64,6 @@
     "vite-plugin-vue-devtools": "^7.7.2",
     "vitest": "^3.0.5",
     "vue-tsc": "^2.2.2"
-  }
+  },
+  "packageManager": "pnpm@9.15.5+sha512.845196026aab1cc3f098a0474b64dfbab2afe7a1b4e91dd86895d8e4aa32a7a6d03049e2d0ad770bbe4de023a7122fb68c1a1d6e0d033c7076085f9d5d4800d4"
 }

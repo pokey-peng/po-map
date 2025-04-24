@@ -2,25 +2,30 @@ const vertexShaderSource = `#version 300 es
     out vec4 v_color;
     in vec4 a_color;
     in vec2 a_position;
-    uniform vec2 u_resolution;
+    in vec2 a_texCoord;
+    out vec2 v_texCoord;
 
+    // 3D 变换矩阵
+    uniform mat4 u_matrix;
+    // 2D 变换矩阵
+    uniform mat3 u_matrix2D;
     void main() {
-      vec2 zeroToOne = a_position / u_resolution;
-      vec2 zeroToTwo = zeroToOne * 2.0;
-      vec2 clipSpace = zeroToTwo - 1.0;
-      gl_Position = vec4(clipSpace * vec2(1,-1), 0, 1);
+      gl_Position = vec4((u_matrix2D * vec3(a_position, 1.0)).xy, 0.0, 1.0);
       v_color = a_color;
+      v_texCoord = a_texCoord;
     }
 `
-
 const fragmentShaderSource = `#version 300 es
     precision highp float;
-    uniform vec4 u_color;
     in vec4 v_color;
+    in vec2 v_texCoord;
     out vec4 outColor;
-
+    uniform sampler2D u_texture;
+    uniform sampler2D u_texture1;
     void main() {
-        outColor = v_color;
+        vec4 color = texture(u_texture1, v_texCoord);
+        vec4 color1 = texture(u_texture, v_texCoord);
+        outColor = mix(color, color1, 0.5);
     }
 `
 function createShader(gl: WebGL2RenderingContext, type: GLenum, source: string) {
@@ -85,12 +90,13 @@ export function randomInt(range: number): number {
  */
 export function drawRectangle(
   gl: WebGL2RenderingContext,
-  program: WebGLProgram,
+
   x: number,
   y: number,
   width: number,
   height: number,
-  color: [number, number, number, number],
+  color?: [number, number, number, number],
+  program?: WebGLProgram,
 ) {
   const x1 = x
   const y1 = y
@@ -98,8 +104,6 @@ export function drawRectangle(
   const y2 = y + height
   const positions = new Float32Array([x1, y1, x2, y1, x1, y2, x1, y2, x2, y1, x2, y2])
   gl.bufferData(gl.ARRAY_BUFFER, positions, gl.STATIC_DRAW)
-
-  gl.uniform4f(gl.getUniformLocation(program, 'u_color'), color[0], color[1], color[2], color[3])
 
   const primitiveType = gl.TRIANGLES
   const offset = 0
@@ -109,17 +113,45 @@ export function drawRectangle(
 
 export function drawTriangle(
   gl: WebGL2RenderingContext,
-  program: WebGLProgram,
   position: number[],
-  color: [number, number, number, number],
+  color?: [number, number, number, number],
+  program?: WebGLProgram,
 ) {
   const positions = new Float32Array(position)
   gl.bufferData(gl.ARRAY_BUFFER, positions, gl.STATIC_DRAW)
-
-  gl.uniform4f(gl.getUniformLocation(program, 'u_color'), color[0], color[1], color[2], color[3])
 
   const primitiveType = gl.TRIANGLES
   const offset = 0
   const count = positions.length / 2
   gl.drawArrays(primitiveType, offset, count)
+}
+
+export function createAndSetupTexture(gl: WebGL2RenderingContext) {
+  const texture = gl.createTexture() as WebGLTexture
+  gl.bindTexture(gl.TEXTURE_2D, texture)
+
+  // 设置纹理过滤器
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST)
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
+
+  return texture
+}
+
+export async function loadImages(imgList: string[]) {
+  const images: HTMLImageElement[] = []
+  const promises = imgList.map((src) => {
+    return new Promise<HTMLImageElement>((resolve, reject) => {
+      const img = new window.Image()
+      img.src = src
+      img.onload = () => resolve(img)
+      img.onerror = (error) => reject(error)
+    })
+  })
+
+  return Promise.all(promises).then((loadedImages) => {
+    images.push(...loadedImages)
+    return images
+  })
 }
