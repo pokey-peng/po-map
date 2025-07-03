@@ -38,7 +38,7 @@ export default defineConfigWithVueTs(
   {
     name: 'app/rules',
     rules: {
-      'no-console': 'warn',
+      'no-console': 'off',
       'no-debugger': 'warn',
       'vue/multi-word-component-names': 'off',
     },

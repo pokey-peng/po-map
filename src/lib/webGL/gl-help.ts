@@ -1,31 +1,61 @@
 const vertexShaderSource = `#version 300 es
-    out vec4 v_color;
-    in vec4 a_color;
-    in vec2 a_position;
+    // 属性 顶点坐标
+    in vec4 a_position;
+    // 属性 对应纹理坐标
     in vec2 a_texCoord;
+    // 属性 对应纹理索引
+    in int a_textureIndex;
+    // 变量 输出传递到片段着色器的纹理坐标
     out vec2 v_texCoord;
+    // 变量 输出传递到片段着色器的纹理索引
+    flat out int u_textureIndex;
 
-    // 3D 变换矩阵
-    uniform mat4 u_matrix;
     // 2D 变换矩阵
-    uniform mat3 u_matrix2D;
+    uniform mat4 u_matrix;
     void main() {
-      gl_Position = vec4((u_matrix2D * vec3(a_position, 1.0)).xy, 0.0, 1.0);
-      v_color = a_color;
+      gl_Position = u_matrix * a_position;
       v_texCoord = a_texCoord;
+      u_textureIndex = a_textureIndex;
     }
 `
 const fragmentShaderSource = `#version 300 es
     precision highp float;
-    in vec4 v_color;
+    // 变量 从顶点着色器传递过来的纹理坐标 会进行插值
     in vec2 v_texCoord;
+    // 使用的纹理序号
+    flat in int u_textureIndex;
+    // 纹理数组
+    uniform sampler2D u_textureArray[6];
+    // 输出颜色
     out vec4 outColor;
-    uniform sampler2D u_texture;
-    uniform sampler2D u_texture1;
     void main() {
-        vec4 color = texture(u_texture1, v_texCoord);
-        vec4 color1 = texture(u_texture, v_texCoord);
-        outColor = mix(color, color1, 0.5);
+        switch (u_textureIndex) {
+        case 0:
+            outColor = texture(u_textureArray[0], v_texCoord);
+            break;
+        case 1:
+            outColor = texture(u_textureArray[1], v_texCoord);
+            break;
+        case 2:
+            outColor = texture(u_textureArray[2], v_texCoord);
+            break;
+        case 3:
+            outColor = texture(u_textureArray[3], v_texCoord);
+            break;
+        case 4:
+            outColor = texture(u_textureArray[4], v_texCoord);
+            break;
+        case 5:
+            outColor = texture(u_textureArray[5], v_texCoord);
+            break;
+        default:
+            outColor = vec4(0.0, 0.0, 0.0, 0.0);
+            break;
+        }
+        // 如果纹理没有被设置, 则输出透明色
+        if (outColor.a < 0.1) {
+            outColor = vec4(0.0, 0.0, 0.0, 0.0);
+        }
     }
 `
 function createShader(gl: WebGL2RenderingContext, type: GLenum, source: string) {
@@ -95,19 +125,176 @@ export function drawRectangle(
   y: number,
   width: number,
   height: number,
-  color?: [number, number, number, number],
-  program?: WebGLProgram,
 ) {
   const x1 = x
   const y1 = y
   const x2 = x + width
   const y2 = y + height
-  const positions = new Float32Array([x1, y1, x2, y1, x1, y2, x1, y2, x2, y1, x2, y2])
+  // 矩阵不需要格式化, 设置eslint忽略注释
+  //  /* eslint-disable*/
+  const positions = new Float32Array([
+    x1,
+    y1,
+    0,
+    x2,
+    y1,
+    0,
+    x1,
+    y2,
+    0,
+    x1,
+    y2,
+    0,
+    x2,
+    y1,
+    0,
+    x2,
+    y2,
+    0,
+  ])
   gl.bufferData(gl.ARRAY_BUFFER, positions, gl.STATIC_DRAW)
 
   const primitiveType = gl.TRIANGLES
   const offset = 0
   const count = positions.length / 2
+  gl.drawArrays(primitiveType, offset, count)
+}
+
+export function drawCube(
+  gl: WebGL2RenderingContext,
+  x: number,
+  y: number,
+  z: number,
+  width: number,
+  height: number,
+  depth: number,
+) {
+  const positions = new Float32Array([
+    // 前面 (正Z方向) - 逆时针顺序
+    x,
+    y,
+    z + depth,
+    x + width,
+    y,
+    z + depth,
+    x + width,
+    y + height,
+    z + depth,
+    x,
+    y,
+    z + depth,
+    x + width,
+    y + height,
+    z + depth,
+    x,
+    y + height,
+    z + depth,
+
+    // 后面 (负Z方向) - 逆时针顺序
+    x + width,
+    y,
+    z,
+    x,
+    y,
+    z,
+    x,
+    y + height,
+    z,
+    x + width,
+    y,
+    z,
+    x,
+    y + height,
+    z,
+    x + width,
+    y + height,
+    z,
+
+    // 左面 (负X方向) - 逆时针顺序
+    x,
+    y,
+    z,
+    x,
+    y,
+    z + depth,
+    x,
+    y + height,
+    z + depth,
+    x,
+    y,
+    z,
+    x,
+    y + height,
+    z + depth,
+    x,
+    y + height,
+    z,
+
+    // 右面 (正X方向) - 逆时针顺序
+    x + width,
+    y,
+    z + depth,
+    x + width,
+    y,
+    z,
+    x + width,
+    y + height,
+    z,
+    x + width,
+    y,
+    z + depth,
+    x + width,
+    y + height,
+    z,
+    x + width,
+    y + height,
+    z + depth,
+
+    // 底面 (负Y方向) - 逆时针顺序
+    x,
+    y,
+    z,
+    x + width,
+    y,
+    z,
+    x + width,
+    y,
+    z + depth,
+    x,
+    y,
+    z,
+    x + width,
+    y,
+    z + depth,
+    x,
+    y,
+    z + depth,
+
+    // 顶面 (正Y方向) - 逆时针顺序
+    x,
+    y + height,
+    z + depth,
+    x + width,
+    y + height,
+    z + depth,
+    x + width,
+    y + height,
+    z,
+    x,
+    y + height,
+    z + depth,
+    x + width,
+    y + height,
+    z,
+    x,
+    y + height,
+    z,
+  ])
+  gl.bufferData(gl.ARRAY_BUFFER, positions, gl.STATIC_DRAW)
+
+  const primitiveType = gl.TRIANGLES
+  const offset = 0
+  const count = 36 // 6个面 × 2个三角形 × 3个顶点
   gl.drawArrays(primitiveType, offset, count)
 }
 

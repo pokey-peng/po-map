@@ -16,6 +16,7 @@ const menus = ref([
       { label: 'Mapbox GL', icon: 'i-mdi-map-marker', route: '/map' },
       { label: 'webgl', icon: 'i-mdi-cube-outline', route: '/webgl-demo' },
       { label: 'Three.js', icon: 'i-mdi-rotate-3d', route: '/threejs-demo' },
+      { label: '矩阵工具', icon: 'i-mdi-matrix', route: '/matrix-demo' },
     ],
   },
   {

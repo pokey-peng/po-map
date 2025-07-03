@@ -30,6 +30,11 @@ const router = createRouter({
           name: 'ThreejsDemo',
           component: () => import('@/views/threejs/threejs-demo.vue'),
         },
+        {
+          path: '/matrix-demo',
+          name: 'MatrixDemo',
+          component: () => import('@/views/matrix/MatrixDemo.vue'),
+        },
       ],
     },
     {
