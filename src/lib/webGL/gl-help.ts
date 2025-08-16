@@ -5,57 +5,100 @@ const vertexShaderSource = `#version 300 es
     in vec2 a_texCoord;
     // 属性 对应纹理索引
     in int a_textureIndex;
+    // 属性 对应法线向量
+    in vec3 a_normal;
     // 变量 输出传递到片段着色器的纹理坐标
     out vec2 v_texCoord;
+    // 变量 输出传递到片段着色器的法线向量
+    out vec3 v_normal;
     // 变量 输出传递到片段着色器的纹理索引
     flat out int u_textureIndex;
+    // 变量 输出表面到光源的向量
+    out vec3 v_surfaceToLight;
+    out vec3 v_surfaceToView;
 
     // 2D 变换矩阵
     uniform mat4 u_matrix;
+    // 3d 世界矩阵
+    uniform mat4 u_worldMatrix;
+    // 点光源位置
+    uniform vec3 u_lightWorldPosition;
+    // 3d 世界转置逆矩阵
+    uniform mat4 u_worldInverseTransposeMatrix;
+    // 相机位置
+    uniform vec3 u_cameraPosition;
     void main() {
       gl_Position = u_matrix * a_position;
       v_texCoord = a_texCoord;
       u_textureIndex = a_textureIndex;
+      v_normal = mat3(u_worldInverseTransposeMatrix) * a_normal; // 将法线向量传递到片段着色器
+      vec3 surfaceWorldPosition =(u_worldMatrix * a_position).xyz;
+      v_surfaceToLight = u_lightWorldPosition - surfaceWorldPosition; // 计算表面到光源的向量
+      v_surfaceToView = u_cameraPosition - surfaceWorldPosition; // 计算表面到视点的向量
     }
 `
 const fragmentShaderSource = `#version 300 es
     precision highp float;
     // 变量 从顶点着色器传递过来的纹理坐标 会进行插值
     in vec2 v_texCoord;
+    // 变量 从顶点着色器传递过来的法线向量
+    in vec3 v_normal;
+    in vec3 v_surfaceToLight;
+    in vec3 v_surfaceToView;
     // 使用的纹理序号
     flat in int u_textureIndex;
     // 纹理数组
     uniform sampler2D u_textureArray[6];
+    // 光照反向射向量
+    uniform vec3 u_lightDirection;
+    // uniform vec3 u_lightColor; // 可选：光照颜色
+    uniform float u_innerLimit;
+    uniform float u_outerLimit;
     // 输出颜色
     out vec4 outColor;
     void main() {
-        switch (u_textureIndex) {
-        case 0:
-            outColor = texture(u_textureArray[0], v_texCoord);
-            break;
-        case 1:
-            outColor = texture(u_textureArray[1], v_texCoord);
-            break;
-        case 2:
-            outColor = texture(u_textureArray[2], v_texCoord);
-            break;
-        case 3:
-            outColor = texture(u_textureArray[3], v_texCoord);
-            break;
-        case 4:
-            outColor = texture(u_textureArray[4], v_texCoord);
-            break;
-        case 5:
-            outColor = texture(u_textureArray[5], v_texCoord);
-            break;
-        default:
-            outColor = vec4(0.0, 0.0, 0.0, 0.0);
-            break;
+        // 采样纹理
+        vec4 texColor;
+        if (u_textureIndex == 0) {
+            texColor = texture(u_textureArray[0], v_texCoord);
+        } else if (u_textureIndex == 1) {
+            texColor = texture(u_textureArray[1], v_texCoord);
+        } else if (u_textureIndex == 2) {
+            texColor = texture(u_textureArray[2], v_texCoord);
+        } else if (u_textureIndex == 3) {
+            texColor = texture(u_textureArray[3], v_texCoord);
+        } else if (u_textureIndex == 4) {
+            texColor = texture(u_textureArray[4], v_texCoord);
+        } else if (u_textureIndex == 5) {
+            texColor = texture(u_textureArray[5], v_texCoord);
+        } else {
+            texColor = vec4(1.0, 1.0, 1.0, 1.0); // 默认白色
         }
-        // 如果纹理没有被设置, 则输出透明色
-        if (outColor.a < 0.1) {
-            outColor = vec4(0.0, 0.0, 0.0, 0.0);
-        }
+
+        // 归一化向量
+        vec3 normal = normalize(v_normal);
+        vec3 lightDirection = normalize(v_surfaceToLight);
+        vec3 viewDirection = normalize(v_surfaceToView);
+
+        // 聚光灯计算
+        // 计算光线方向与聚光灯方向的夹角余弦值
+        float dotFromDirection = dot(-lightDirection, normalize(u_lightDirection));
+
+        // 使用smoothstep实现平滑的聚光灯衰减
+        float spotFactor = smoothstep(u_outerLimit, u_innerLimit, dotFromDirection);
+
+        // 简单高光效果
+        vec3 halfVector = normalize(lightDirection + viewDirection);
+        float specular = pow(max(dot(normal, halfVector), 0.0), 64.0);
+
+        float light = dot(normal, -lightDirection);
+        // 应用聚光灯效果：基础纹理 * 聚光灯强度 + 高光
+        vec3 finalColor = texColor.rgb * spotFactor*light + specular * spotFactor * vec3(1.0);
+
+        outColor = vec4(finalColor, texColor.a);
+
+        // Alpha测试
+        if (outColor.a < 0.05) discard;
     }
 `
 function createShader(gl: WebGL2RenderingContext, type: GLenum, source: string) {
@@ -292,10 +335,10 @@ export function drawCube(
   ])
   gl.bufferData(gl.ARRAY_BUFFER, positions, gl.STATIC_DRAW)
 
-  const primitiveType = gl.TRIANGLES
-  const offset = 0
-  const count = 36 // 6个面 × 2个三角形 × 3个顶点
-  gl.drawArrays(primitiveType, offset, count)
+  // const primitiveType = gl.TRIANGLES
+  // const offset = 0
+  // const count = 36 // 6个面 × 2个三角形 × 3个顶点
+  // gl.drawArrays(primitiveType, offset, count)
 }
 
 export function drawTriangle(
@@ -341,4 +384,118 @@ export async function loadImages(imgList: string[]) {
     images.push(...loadedImages)
     return images
   })
+}
+
+export function setNormals(gl: WebGL2RenderingContext) {
+  const normals = new Float32Array([
+    0,
+    0,
+    1,
+    0,
+    0,
+    1,
+    0,
+    0,
+    1,
+    0,
+    0,
+    1,
+    0,
+    0,
+    1,
+    0,
+    0,
+    1, // 前面法线
+    0,
+    0,
+    -1,
+    0,
+    0,
+    -1,
+    0,
+    0,
+    -1,
+    0,
+    0,
+    -1,
+    0,
+    0,
+    -1,
+    0,
+    0,
+    -1, // 后面法线
+    -1,
+    0,
+    0,
+    -1,
+    0,
+    0,
+    -1,
+    0,
+    0,
+    -1,
+    0,
+    0,
+    -1,
+    0,
+    0,
+    -1,
+    0,
+    0, // 左面法线
+    1,
+    0,
+    0,
+    1,
+    0,
+    0,
+    1,
+    0,
+    0,
+    1,
+    0,
+    0,
+    1,
+    0,
+    0,
+    1,
+    0,
+    0, // 右面法线
+    0,
+    -1,
+    0,
+    0,
+    -1,
+    0,
+    0,
+    -1,
+    0,
+    0,
+    -1,
+    0,
+    0,
+    -1,
+    0,
+    0,
+    -1,
+    0, // 底面法线
+    0,
+    1,
+    0,
+    0,
+    1,
+    0,
+    0,
+    1,
+    0,
+    0,
+    1,
+    0,
+    0,
+    1,
+    0,
+    0,
+    1,
+    0, // 顶面法线
+  ])
+  gl.bufferData(gl.ARRAY_BUFFER, normals, gl.STATIC_DRAW)
 }

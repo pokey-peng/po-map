@@ -203,25 +203,25 @@ class M4 {
    * @returns 4x4 透视投影矩阵
    */
   static perspective(fov: number, aspect: number, near: number, far: number): Float32Array {
-    const f = Math.tan(Math.PI * 0.5 - 0.5 * fov)
-    const rangeInv = 1 / (near - far)
+    const f = Math.tan(Math.PI * 0.5 - 0.5 * fov) // 计算焦距
+    const rangeInv = 1 / (near - far) // 计算近远裁剪平面的范围倒数, 用来归一化深度值
 
     return new Float32Array([
-      f / aspect,
+      f / aspect, // 水平缩放
       0,
       0,
       0,
       0,
-      f,
+      f, // 垂直缩放
       0,
       0,
       0,
       0,
-      (near + far) * rangeInv,
-      -1,
+      (near + far) * rangeInv, // 深度归一化
+      -1, // 透视除法
       0,
       0,
-      near * far * rangeInv * 2,
+      near * far * rangeInv * 2, // 深度归一化
       0,
     ])
   }
@@ -620,7 +620,7 @@ class M4 {
     return [a[0] - b[0], a[1] - b[1], a[2] - b[2]]
   }
 
-  private static normalize(v: number[]): number[] {
+  static normalize(v: number[]): number[] {
     const length = Math.sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2])
     if (length > 0) {
       return [v[0] / length, v[1] / length, v[2] / length]

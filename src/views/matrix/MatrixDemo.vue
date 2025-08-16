@@ -81,7 +81,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, onMounted, watch } from 'vue'
-import M3, { M4 } from '../../lib/webGL/m3'
+import { M3, M4 } from '../../lib/webGL/m3'
 import { runAllExamples } from '../../lib/webGL/matrix-examples'
 
 // 2D 变换参数

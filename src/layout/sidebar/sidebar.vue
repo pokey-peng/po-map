@@ -17,6 +17,8 @@ const menus = ref([
       { label: 'webgl', icon: 'i-mdi-cube-outline', route: '/webgl-demo' },
       { label: 'Three.js', icon: 'i-mdi-rotate-3d', route: '/threejs-demo' },
       { label: '矩阵工具', icon: 'i-mdi-matrix', route: '/matrix-demo' },
+      { label: '多个物体', icon: 'i-mdi-cube-outline', route: '/webgl-object' },
+      { label: '加载Obj', icon: 'i-mdi-cube-outline', route: '/webgl-load-obj' },
     ],
   },
   {

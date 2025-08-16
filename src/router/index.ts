@@ -35,6 +35,16 @@ const router = createRouter({
           name: 'MatrixDemo',
           component: () => import('@/views/matrix/MatrixDemo.vue'),
         },
+        {
+          path: '/webgl-object',
+          name: 'WebglObject',
+          component: () => import('@/views/webgl/webgl-object.vue'),
+        },
+        {
+          path: '/webgl-load-obj',
+          name: 'WebglLoadObj',
+          component: () => import('@/views/webgl/webgl-loadObj.vue'),
+        },
       ],
     },
     {
