@@ -17,6 +17,20 @@ interface Geometry {
   material: string
   object: string
 }
+
+interface Material {
+  name: string
+  ambient?: number[] // 环境光反射系数
+  diffuse?: number[] // 漫反射系数
+  specular?: number[] // 镜面反射系数
+  emissive?: number[] // 自发光系数
+  shininess?: number // 镜面反射高光指数
+  opacity?: number // 透明度
+  transparency?: number // 透明度
+  opticalDensity?: number // 光学密度/折射率
+  illum?: number // 光照模型
+  transmissionFilter?: number[] // 传输滤波器
+}
 export default {
   degToRad(degrees: number): number {
     return (degrees * Math.PI) / 180
@@ -173,7 +187,7 @@ export default {
       mtllib(parts: string[], unparsedArgs: string) {
         materialLibs.push(unparsedArgs)
       },
-      usemetl(parts: string[], unparsedArgs: string) {
+      usemtl(parts: string[], unparsedArgs: string) {
         material = unparsedArgs
         newGeometry()
       },
@@ -186,7 +200,7 @@ export default {
       },
     }
 
-    const keywordRE = /(\w*)(?: )*(.*)/
+    const keywordRE = /^(\w+)\s*(.*)$/
     const lines = text.split('\n')
     for (let lineNo = 0; lineNo < lines.length; ++lineNo) {
       const line = lines[lineNo].trim()
@@ -220,6 +234,120 @@ export default {
       materialLibs,
     }
   },
+  parseMTL(text: string) {
+    const materials: Record<string, Material> = {}
+    let currentMaterial: Material | null = null
+
+    const keywords: Record<string, (parts: string[], unparsedArgs: string) => void> = {
+      newmtl(parts: string[], unparsedArgs: string) {
+        // 创建新材质
+        currentMaterial = {
+          name: unparsedArgs.trim(),
+        }
+        materials[unparsedArgs.trim()] = currentMaterial
+      },
+
+      // 环境光反射系数 (Ambient)
+      Ka(parts: string[]) {
+        if (currentMaterial && parts.length >= 3) {
+          currentMaterial.ambient = parts.slice(0, 3).map(parseFloat)
+        }
+      },
+
+      // 漫反射系数 (Diffuse)
+      Kd(parts: string[]) {
+        if (currentMaterial && parts.length >= 3) {
+          currentMaterial.diffuse = parts.slice(0, 3).map(parseFloat)
+        }
+      },
+
+      // 镜面反射系数 (Specular)
+      Ks(parts: string[]) {
+        if (currentMaterial && parts.length >= 3) {
+          currentMaterial.specular = parts.slice(0, 3).map(parseFloat)
+        }
+      },
+
+      // 发射光 (Emissive)
+      Ke(parts: string[]) {
+        if (currentMaterial && parts.length >= 3) {
+          currentMaterial.emissive = parts.slice(0, 3).map(parseFloat)
+        }
+      },
+
+      // 镜面反射指数 (Shininess)
+      Ns(parts: string[]) {
+        if (currentMaterial && parts.length >= 1) {
+          currentMaterial.shininess = parseFloat(parts[0])
+        }
+      },
+
+      // 不透明度 (Opacity)
+      d(parts: string[]) {
+        if (currentMaterial && parts.length >= 1) {
+          currentMaterial.opacity = parseFloat(parts[0])
+        }
+      },
+
+      // 透明度 (Transparency) - 与 d 相反
+      Tr(parts: string[]) {
+        if (currentMaterial && parts.length >= 1) {
+          const transparency = parseFloat(parts[0])
+          currentMaterial.transparency = transparency
+          // 如果没有设置 opacity，根据透明度计算
+          if (currentMaterial.opacity === undefined) {
+            currentMaterial.opacity = 1.0 - transparency
+          }
+        }
+      },
+
+      // 光学密度/折射率 (Optical Density)
+      Ni(parts: string[]) {
+        if (currentMaterial && parts.length >= 1) {
+          currentMaterial.opticalDensity = parseFloat(parts[0])
+        }
+      },
+
+      // 光照模型 (Illumination model)
+      illum(parts: string[]) {
+        if (currentMaterial && parts.length >= 1) {
+          currentMaterial.illum = parseInt(parts[0])
+        }
+      },
+
+      // 传输滤波器 (Transmission filter)
+      Tf(parts: string[]) {
+        if (currentMaterial && parts.length >= 3) {
+          currentMaterial.transmissionFilter = parts.slice(0, 3).map(parseFloat)
+        }
+      },
+    }
+    const keywordRE = /^(\w+)\s*(.*)$/
+    const lines = text.split('\n')
+    for (let lineNo = 0; lineNo < lines.length; ++lineNo) {
+      const line = lines[lineNo].trim()
+      if (line == '' || line.startsWith('#')) {
+        continue // skip empty lines and comments
+      }
+      const m = keywordRE.exec(line)
+      if (!m) {
+        continue
+      }
+      const [, keyword, unparsedArgs] = m
+      const parts = line
+        .split(/\s+/)
+        .slice(1)
+        .map((s) => s.trim())
+        .filter((s) => s !== '')
+      const handler = keywords[keyword]
+      if (!handler) {
+        console.warn(`Unknown keyword "${keyword}" at line ${lineNo + 1}`)
+        continue
+      }
+      handler(parts, unparsedArgs)
+    }
+    return materials
+  },
   getExtents(positions: number[]): { min: number[]; max: number[] } {
     const min = positions.slice(0, 3)
     const max = positions.slice(0, 3)
@@ -249,5 +377,21 @@ export default {
         max: Array(3).fill(Number.NEGATIVE_INFINITY),
       },
     )
+  },
+  createLoadObjFn(baseUrl: string) {
+    return async (objfilename: string) => {
+      const response = await fetch(`${baseUrl}${objfilename}`)
+      const text = await response.text()
+      const obj = this.parseObj(text)
+      const matTexts = await Promise.all(
+        obj.materialLibs.map(async (mtlFilename) => {
+          const mtlUrl = `${baseUrl}${mtlFilename}`
+          const response = await fetch(mtlUrl)
+          return await response.text()
+        }),
+      )
+      const materials = matTexts.map((mtlText) => this.parseMTL(mtlText))
+      return { obj, materials: Object.assign({}, ...materials) }
+    }
   },
 }

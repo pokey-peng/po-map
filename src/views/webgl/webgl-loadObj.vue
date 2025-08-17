@@ -1,18 +1,17 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { loadStaticFile } from '@/utils'
 import glUtils from '@/lib/webGL/gl-utils.ts'
 import * as twgl from 'twgl.js'
 
 const canvas = ref<HTMLCanvasElement | null>(null)
 let gl: WebGL2RenderingContext | null = null
 async function main(gl: WebGL2RenderingContext) {
-  const objText = await loadStaticFile('/models/CornellBox/CornellBox-Sphere.obj')
-  const obj = glUtils.parseObj(objText)
+  const loadObjFn = glUtils.createLoadObjFn('/models/CornellBox/')
+  const { obj, materials } = await loadObjFn('CornellBox-Sphere.obj')
   twgl.setDefaults({
     attribPrefix: 'a_',
   })
-  console.log(obj)
+  console.log(obj, materials)
   const vs = `#version 300 es
   in vec4 a_position;
   in vec3 a_normal;
@@ -21,12 +20,16 @@ async function main(gl: WebGL2RenderingContext) {
   uniform mat4 u_projection;
   uniform mat4 u_view;
   uniform mat4 u_world;
+  uniform vec3 u_viewWorldPosition;
 
   out vec3 v_normal;
+  out vec3 v_surfaceToView;
   out vec4 v_color;
 
   void main() {
-    gl_Position = u_projection * u_view * u_world * a_position;
+    vec4 worldPosition = u_world * a_position;
+    gl_Position = u_projection * u_view * worldPosition;
+    v_surfaceToView = u_viewWorldPosition - worldPosition.xyz;
     v_normal = mat3(u_world) * a_normal;
     v_color = a_color;
   }
@@ -36,35 +39,58 @@ async function main(gl: WebGL2RenderingContext) {
   precision highp float;
 
   in vec3 v_normal;
+  in vec3 v_surfaceToView;
   in vec4 v_color;
 
-  uniform vec4 u_diffuse;
+  uniform vec3 diffuse;
+  uniform vec3 ambient;
+  uniform vec3 emissive;
+  uniform vec3 specular;
+  uniform float shininess;
+  uniform float opacity;
   uniform vec3 u_lightDirection;
+  uniform vec3 u_ambientLight;
 
   out vec4 outColor;
 
   void main () {
     vec3 normal = normalize(v_normal);
+
+    vec3 surfaceToViewDirection = normalize(v_surfaceToView);
+    vec3 halfVector = normalize(u_lightDirection + surfaceToViewDirection);
+
     float fakeLight = dot(u_lightDirection, normal) * .5 + .5;
-    vec4 diffuse = u_diffuse * v_color;
-    outColor = vec4(diffuse.rgb * fakeLight, diffuse.a);
+    float specularLight = clamp(dot(normal, halfVector), 0.0, 1.0);
+
+    vec3 effectiveDiffuse = diffuse.rgb * v_color.rgb;
+    float effectiveOpacity = v_color.a * opacity;
+
+    outColor = vec4(
+        emissive +
+        ambient * u_ambientLight +
+        effectiveDiffuse * fakeLight +
+        specular * pow(specularLight, shininess),
+        effectiveOpacity);
   }
   `
   const meshProgramInfo = twgl.createProgramInfo(gl, [vs, fs])
-  const parts = obj.geometries.map(({ data }) => {
+  const parts = obj.geometries.map(({ material, data }) => {
     if (data.color && Array.isArray(data.color)) {
       if (data.position?.length === data.color?.length) {
         data.color = { numComponents: 3, data: data.color }
       }
     } else {
       data.color = { value: [1, 1, 1, 1] }
+      // 随机颜色
+      // const r = glUtils.rand(0.1, 0.9)
+      // const g = glUtils.rand(0.1, 0.9)
+      // const b = glUtils.rand(0.1, 0.9)
+      // data.color = { numComponents: 3, data: [r, g, b] }
     }
     const bufferInfo = twgl.createBufferInfoFromArrays(gl, data as any)
     const vao = twgl.createVAOFromBufferInfo(gl, meshProgramInfo, bufferInfo)
     return {
-      material: {
-        u_diffuse: [1, 1, 1, 1],
-      },
+      material: materials[material as keyof typeof materials],
       bufferInfo,
       vao,
     }
@@ -100,6 +126,7 @@ async function main(gl: WebGL2RenderingContext) {
       u_lightDirection: twgl.v3.normalize([-1, 3, 5]),
       u_view: view,
       u_projection: projection,
+      u_viewWorldPosition: cameraPosition,
     }
     gl?.useProgram(meshProgramInfo.program)
     twgl.setUniforms(meshProgramInfo, sharedUniforms)
@@ -110,7 +137,7 @@ async function main(gl: WebGL2RenderingContext) {
       gl?.bindVertexArray(vao)
       twgl.setUniforms(meshProgramInfo, {
         u_world,
-        u_diffuse: material.u_diffuse,
+        ...material,
       })
       twgl.drawBufferInfo(gl, bufferInfo)
     }
