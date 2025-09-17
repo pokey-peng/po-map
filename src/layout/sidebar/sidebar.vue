@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import {mapRoutes} from "@/router/mapRoutes"
 const route = useRoute()
 const activeMenu = computed(() => {
   // 获取当前路由的path,并与菜单项的path进行匹配
@@ -19,6 +20,7 @@ const menus = ref([
       { label: '矩阵工具', icon: 'i-mdi-matrix', route: '/matrix-demo' },
       { label: '多个物体', icon: 'i-mdi-cube-outline', route: '/webgl-object' },
       { label: '加载Obj', icon: 'i-mdi-cube-outline', route: '/webgl-load-obj' },
+      { label: '3d', icon: 'i-mdi-cube-outline', route: '/webgl-3d' },
     ],
   },
   {
@@ -34,6 +36,16 @@ const menus = ref([
     ],
   },
 ])
+mapRoutes.forEach((route) => {
+  const menu = menus.value[0];
+  if (!menu.items.find((item => item.route === route.path))) {
+    menu.items.push({
+      label: route.label ?? route.name,
+      icon: route.icon ?? 'i-mdi-cube-outline',
+      route: route.path
+    })
+  }
+})
 const expandedKeys = ref({
   Map: true,
   Dashboard: false,

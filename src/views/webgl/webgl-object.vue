@@ -3,6 +3,7 @@ import { onMounted } from 'vue'
 import * as twgl from 'twgl.js'
 import glShader from '@/lib/webGL/gl-shader.ts'
 import glUtils from '@/lib/webGL/gl-utils'
+// @ts-expect-error 导入无类型定义的库
 import chroma from 'chroma-js'
 
 const canvas = ref<HTMLCanvasElement | null>(null)
