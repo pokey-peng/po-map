@@ -3,6 +3,7 @@ import '@unocss/reset/sanitize/assets.css'
 import './assets/main.css'
 import 'virtual:uno.css'
 import 'mapbox-gl/dist/mapbox-gl.css'
+import "cesium/Build/Cesium/Widgets/widgets.css";
 
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
@@ -13,6 +14,8 @@ import router from './router'
 import PrimeVue from 'primevue/config'
 import Aura from '@primeuix/themes/aura'
 import { createI18n } from 'vue-i18n'
+
+window.CESIUM_BASE_URL = 'http://localhost:8080/Cesium-1.126/Build/Cesium';
 
 const i18n = createI18n({
   locale: 'zh',

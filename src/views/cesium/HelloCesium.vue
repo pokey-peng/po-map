@@ -3,13 +3,39 @@ import * as Cesium from 'cesium'
 
 function initGlobalCesium() {
   Cesium.Ion.defaultAccessToken = import.meta.env.VITE_CESIUM_ION_TOKEN
-  Cesium.Camera.DEFAULT_VIEW_RECTANGLE = Cesium.Rectangle.fromDegrees(
-    -180.0,
-    -90.0,
-    180.0,
-    90.0
-  )
-  Cesium.Camera.DEFAULT_VIEW_FACTOR = Cesium.Math.toRadians(60)
+  const viewer = new Cesium.Viewer('HelloCesium')
+  const blueBox = viewer.entities.add({
+    name: 'Blue box',
+    position: Cesium.Cartesian3.fromDegrees(-114.0, 40.0, 300000.0),
+    box: {
+      dimensions: new Cesium.Cartesian3(400000.0, 300000.0, 500000.0),
+      material: Cesium.Color.BLUE,
+    },
+  })
+
+  const redBox = viewer.entities.add({
+    name: 'Red box with black outline',
+    position: Cesium.Cartesian3.fromDegrees(-107.0, 40.0, 300000.0),
+    box: {
+      dimensions: new Cesium.Cartesian3(400000.0, 300000.0, 500000.0),
+      material: Cesium.Color.RED.withAlpha(0.5),
+      outline: true,
+      outlineColor: Cesium.Color.BLACK,
+    },
+  })
+
+  const outlineOnly = viewer.entities.add({
+    name: 'Yellow box outline',
+    position: Cesium.Cartesian3.fromDegrees(-100.0, 40.0, 300000.0),
+    box: {
+      dimensions: new Cesium.Cartesian3(400000.0, 300000.0, 500000.0),
+      fill: false,
+      outline: true,
+      outlineColor: Cesium.Color.YELLOW,
+    },
+  })
+
+  viewer.zoomTo(viewer.entities)
 }
 onMounted(() => {
   initGlobalCesium()
@@ -17,9 +43,6 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="HelloCesium">
-
-</div>
+  <div id="HelloCesium">
+  </div>
 </template>
-
-<style lang="scss" scoped></style>

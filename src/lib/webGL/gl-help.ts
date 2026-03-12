@@ -113,9 +113,9 @@ function createShader(gl: WebGL2RenderingContext, type: GLenum, source: string) 
   gl.deleteShader(shader)
 }
 
-export function createProgram(gl: WebGL2RenderingContext) {
-  const vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSource) as WebGLShader
-  const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSource) as WebGLShader
+export function createProgram(gl: WebGL2RenderingContext, VSHADER?: string, FSHADER?: string) {
+  const vertexShader = createShader(gl, gl.VERTEX_SHADER, VSHADER || vertexShaderSource) as WebGLShader
+  const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, FSHADER || fragmentShaderSource) as WebGLShader
   const program = gl.createProgram() as WebGLProgram
   gl.attachShader(program, vertexShader)
   gl.attachShader(program, fragmentShader)
@@ -127,6 +127,7 @@ export function createProgram(gl: WebGL2RenderingContext) {
   }
   console.error('程序链接失败:', gl.getProgramInfoLog(program))
   gl.deleteProgram(program)
+  throw new Error('程序链接失败')
 }
 
 export function resizeCanvasToDisplaySize(canvas: HTMLCanvasElement): boolean {
