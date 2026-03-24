@@ -75,5 +75,12 @@ export const mapRoutes = [
     label: "WebGL纹理",
     icon: "i-mdi-cube-outline",
     component: () => import('@/views/webgl/webgl-texture.vue'),
+  },
+  {
+    path: '/webgl-threeD',
+    name: 'WebglThreeD',
+    label: "WebGL三维",
+    icon: "i-mdi-cube-outline",
+    component: () => import('@/views/webgl/webGL-ThreeD.vue'),
   }
 ]

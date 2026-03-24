@@ -27,7 +27,46 @@ abstract class Matrix {
 }
 
 const IDENTITY_4 = new Float32Array([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1])
-
+class Vector4 {
+  x: number;
+  y: number;
+  z: number;
+  w: number;
+  constructor(x: number = 0, y: number = 0, z: number = 0, w: number = 1) {
+    this.x = x;
+    this.y = y;
+    this.z = z;
+    this.w = w;
+  }
+  get xyz() {
+    return [this.x, this.y, this.z]
+  }
+  get xyzw() {
+    return [this.x, this.y, this.z, this.w]
+  }
+  normalize() {
+    const len = Math.hypot(this.x, this.y, this.z)
+    if (len === 0) {
+      throw new Error('Cannot normalize zero vector')
+    }
+    this.x /= len
+    this.y /= len
+    this.z /= len
+  }
+  // 点乘
+  dot(other: Vector4): number {
+    return this.x * other.x + this.y * other.y + this.z * other.z
+  }
+  // 叉乘
+  cross(other: Vector4): Vector4 {
+    return new Vector4(
+      this.y * other.z - this.z * other.y,
+      this.z * other.x - this.x * other.z,
+      this.x * other.y - this.y * other.x,
+      0
+    )
+  }
+}
 class Matrix4 extends Matrix implements IMatrix {
   private _tmpTransform: Float32Array
   private _tmpResult: Float32Array
@@ -39,8 +78,61 @@ class Matrix4 extends Matrix implements IMatrix {
     this.setIdentity();
   }
 
+  set(Matrix4: Matrix4) {
+    this._elements.set(Matrix4.elements)
+    return this
+  }
+
   setIdentity() {
     this._elements.set(IDENTITY_4)
+  }
+
+  setLookAt(eyeX: number, eyeY: number, eyeZ: number, centerX: number, centerY: number, centerZ: number, upX: number, upY: number, upZ: number) {
+    const eye = new Vector4(eyeX, eyeY, eyeZ)
+    const center = new Vector4(centerX, centerY, centerZ)
+    const up = new Vector4(upX, upY, upZ)
+
+    const zAxis = new Vector4(
+      eye.x - center.x,
+      eye.y - center.y,
+      eye.z - center.z,
+      0
+    )
+    zAxis.normalize()
+
+    const xAxis = up.cross(zAxis)
+    xAxis.normalize()
+    const yAxis = zAxis.cross(xAxis)
+
+    this.setIdentity()
+    this._elements.set([
+      xAxis.x, yAxis.x, zAxis.x, 0,
+      xAxis.y, yAxis.y, zAxis.y, 0,
+      xAxis.z, yAxis.z, zAxis.z, 0,
+      -xAxis.dot(eye), -yAxis.dot(eye), -zAxis.dot(eye), 1
+    ])
+  }
+
+  setOrtho(left: number, right: number, bottom: number, top: number, near: number, far: number) {
+    this.setIdentity()
+    this._elements.set([
+      2 / (right - left), 0, 0, 0,
+      0, 2 / (top - bottom), 0, 0,
+      0, 0, -2 / (far - near), 0,
+      -(right + left) / (right - left), -(top + bottom) / (top - bottom), -(far + near) / (far - near), 1
+    ])
+
+  }
+
+  setPerspective(fovY: number, aspect: number, near: number, far: number) {
+    const f = 1 / Math.tan((fovY * Math.PI) / 360)
+    this.setIdentity()
+    this._elements.set([
+      f / aspect, 0, 0, 0,
+      0, f, 0, 0,
+      0, 0, (far + near) / (near - far), -1,
+      0, 0, (2 * far * near) / (near - far), 0
+    ])
   }
 
   setTranslate(x: number = 0, y: number = 0, z: number = 0) {
@@ -140,6 +232,7 @@ class Matrix4 extends Matrix implements IMatrix {
 
   multiply(other: Matrix4) {
     this.multiplyElements(other.elements)
+    return this
   }
 
   private multiplyElements(otherElements: Float32Array) {

@@ -21,6 +21,7 @@ declare module 'vue' {
     MapConatiner: typeof import('./components/MapContainer.vue')['default']
     MapContainer: typeof import('./components/MapContainer.vue')['default']
     PanelMenu: typeof import('primevue/panelmenu')['default']
+    RadioButton: typeof import('primevue/radiobutton')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     Slider: typeof import('primevue/slider')['default']

@@ -9,13 +9,11 @@ let program: WebGLProgram | null = null
 
 let modelMatrixLocation: WebGLUniformLocation | null = null
 let projectionMatrixLocation: WebGLUniformLocation | null = null
-let uUseTextureLocation: WebGLUniformLocation | null = null
 
 
 let coordinateVAO: WebGLVertexArrayObject | null = null
 let triangleVAO: WebGLVertexArrayObject | null = null
 let pointsVAO: WebGLVertexArrayObject | null = null
-const rectTextureVAO: WebGLVertexArrayObject | null = null
 
 const modelMatrix = new Matrix4()
 const projectionMatrix = new Matrix4()
@@ -90,10 +88,7 @@ function requestRender() {
   })
 }
 
-function sleep(time: number) {
-  return new Promise((resolve) => setTimeout(resolve, time))
-}
-async function renderGl() {
+function renderGl() {
   if (!canvas.value) {
     throw new Error('Canvas element not available')
   }
@@ -112,40 +107,40 @@ async function renderGl() {
        in vec4 a_Position;
        in vec4 a_Color;
        out vec4 v_Color;
-       in vec2 a_TexCoord;
-       out vec2 v_TexCoord;
        uniform mat4 u_ModelMatrix;
        uniform mat4 u_ProjectionMatrix;
        void main() {
          gl_Position = u_ProjectionMatrix * u_ModelMatrix * a_Position;
          gl_PointSize = 10.0;
          v_Color = a_Color;
-         v_TexCoord = a_TexCoord;
        }
     `,
     `#version 300 es
        precision highp float;
        in vec4 v_Color;
-       in vec2 v_TexCoord;
-       uniform sampler2D u_Sampler;
-       uniform bool u_UseTexture;
+      //  uniform vec4 u_Color;
        out vec4 fragColor;
        void main() {
-          fragColor = u_UseTexture ? texture(u_Sampler, v_TexCoord) : v_Color;
+          fragColor = v_Color;
        }
     `,
   )
 
   gl.useProgram(program)
-  initTextures(gl)
-  initVAOs(gl, program)
-
+  initVAOs()
   requestRender()
 }
 
 
 
-function initVAOs(gl: WebGL2RenderingContext, program: WebGLProgram) {
+function initVAOs() {
+  if (!gl) {
+    throw new Error('WebGL context not initialized')
+  }
+  /* ---- 获取位置 ---- */
+  if (!gl || !program) {
+    throw new Error('WebGL context or program not initialized')
+  }
   const aPositionLocation = gl.getAttribLocation(program, 'a_Position')
   if (aPositionLocation < 0) {
     throw new Error('a_Position attribute not found')
@@ -153,11 +148,6 @@ function initVAOs(gl: WebGL2RenderingContext, program: WebGLProgram) {
   const aColorLocation = gl.getAttribLocation(program, 'a_Color')
   if (aColorLocation < 0) {
     throw new Error('a_Color attribute not found')
-  }
-
-  const aTexCoordLocation = gl.getAttribLocation(program, 'a_TexCoord')
-  if (aTexCoordLocation < 0) {
-    throw new Error('a_TexCoord attribute not found')
   }
 
   modelMatrixLocation = gl.getUniformLocation(program, 'u_ModelMatrix')
@@ -168,11 +158,6 @@ function initVAOs(gl: WebGL2RenderingContext, program: WebGLProgram) {
   projectionMatrixLocation = gl.getUniformLocation(program, 'u_ProjectionMatrix')
   if (!projectionMatrixLocation) {
     throw new Error('u_ProjectionMatrix uniform not found')
-  }
-
-  uUseTextureLocation = gl.getUniformLocation(program, 'u_UseTexture')
-  if (!uUseTextureLocation) {
-    throw new Error('u_UseTexture uniform not found')
   }
 
 
@@ -204,26 +189,6 @@ function initVAOs(gl: WebGL2RenderingContext, program: WebGLProgram) {
   gl.enableVertexAttribArray(aColorLocation)
   gl.vertexAttribPointer(aColorLocation, 3, gl.FLOAT, false, elementBytes * 5 , elementBytes * 2)
 
-  /*---- 绑定点VAO -----*/
-  gl.bindVertexArray(pointsVAO)
-  const pointsBuffer = gl.createBuffer()
-  if (!pointsBuffer) {
-    throw new Error('pointsBuffer not created')
-  }
-  gl.bindBuffer(gl.ARRAY_BUFFER, pointsBuffer)
-  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
-    -1, -0, 0, 0, 1,
-    1, 0, 0, 0, 1,
-    0, 0.5, 0, 0, 1,
-    0, -0.5, 0, 0, 1,
-  ]), gl.STATIC_DRAW)
-
-  // 位置属性
-  gl.enableVertexAttribArray(aPositionLocation)
-  gl.vertexAttribPointer(aPositionLocation, 2, gl.FLOAT, false, elementBytes * 5, 0)
-  // 颜色属性
-  gl.enableVertexAttribArray(aColorLocation)
-  gl.vertexAttribPointer(aColorLocation, 3, gl.FLOAT, false, elementBytes * 5, elementBytes * 2)
 
   /*---- 绑定三角形VAO -----*/
   gl.bindVertexArray(triangleVAO)
@@ -245,65 +210,26 @@ function initVAOs(gl: WebGL2RenderingContext, program: WebGLProgram) {
   gl.enableVertexAttribArray(aColorLocation)
   gl.vertexAttribPointer(aColorLocation, 3, gl.FLOAT, false, elementBytes * 5, elementBytes * 2)
 
-  /**---- 绑定纹理图片VAO -----*/
-  gl.bindVertexArray(rectTextureVAO)
-  const rectTextureBuffer = gl.createBuffer()
-  if (!rectTextureBuffer) {
-    throw new Error('rectTextureBuffer not created')
+  /*---- 绑定点VAO -----*/
+  gl.bindVertexArray(pointsVAO)
+  const pointsBuffer = gl.createBuffer()
+  if (!pointsBuffer) {
+    throw new Error('pointsBuffer not created')
   }
-  gl.bindBuffer(gl.ARRAY_BUFFER, rectTextureBuffer)
+  gl.bindBuffer(gl.ARRAY_BUFFER, pointsBuffer)
   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
-    -0.88, -0.5, 0, 0,
-    0.88, 0.5, 1, 1,
-    -0.88, 0.5, 0, 1,
-    -0.88, -0.5, 0, 0,
-    0.88, -0.5, 1, 0,
-    0.88, 0.5, 1, 1,
+    -1, -0, 0, 0, 1,
+    1, 0, 0, 0, 1,
+    0, 0.5, 0, 0, 1,
+    0, -0.5, 0, 0, 1,
   ]), gl.STATIC_DRAW)
+
   // 位置属性
   gl.enableVertexAttribArray(aPositionLocation)
-  gl.vertexAttribPointer(aPositionLocation, 2, gl.FLOAT, false, elementBytes * 4, 0)
-  // 纹理坐标属性
-  gl.enableVertexAttribArray(aTexCoordLocation)
-  gl.vertexAttribPointer(aTexCoordLocation, 2, gl.FLOAT, false, elementBytes * 4, elementBytes * 2)
-}
-function loadImages(url: string): Promise<HTMLImageElement> {
-  return new Promise((resolve, reject) => {
-    const image = new window.Image()
-    image.onload = () => resolve(image)
-    image.onerror = (err) => reject(err)
-    image.src = url
-  })
-}
-async function initTextures(gl: WebGL2RenderingContext) {
-  Promise.all([
-    loadTextures(gl, '/imgs/child.png'),
-  ]).then(() => {
-    renderPending = false
-    requestRender()
-  }).catch((err) => {
-    console.error('Failed to load textures', err)
-  })
-}
-
-async function loadTextures(gl: WebGL2RenderingContext, imgagePath: string, texUnit:number = 0, texture?: WebGLTexture, ) {
-  const curTexture = texture || gl.createTexture()
-  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 1)
-  gl.activeTexture(gl.TEXTURE0)
-  gl.bindTexture(gl.TEXTURE_2D, curTexture)
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR)
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT)
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT)
-
-  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([0, 0, 255, 255]))
-  const image = await loadImages(imgagePath)
-  return new Promise((resolve) => {
-    gl.bindTexture(gl.TEXTURE_2D, curTexture)
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image)
-    gl.generateMipmap(gl.TEXTURE_2D)
-    resolve(curTexture)
-  })
+  gl.vertexAttribPointer(aPositionLocation, 2, gl.FLOAT, false, elementBytes * 5, 0)
+  // 颜色属性
+  gl.enableVertexAttribArray(aColorLocation)
+  gl.vertexAttribPointer(aColorLocation, 3, gl.FLOAT, false, elementBytes * 5, elementBytes * 2)
 }
 
 function drawScene() {
@@ -317,7 +243,6 @@ function drawScene() {
   drawCoordinate()
   drawPoints()
   drawTriangle()
-  drawRectTexture()
 
 
   if (import.meta.env.DEV) {
@@ -380,23 +305,9 @@ function drawTriangle() {
     throw new Error('Triangle resources not initialized')
   }
   gl.bindVertexArray(triangleVAO)
-  setModelMatrix(identityMatrix)
-  // updateModelMatrix()
-  // setModelMatrix(modelMatrix)
-  gl.drawArrays(gl.TRIANGLES, 0, 3)
-}
-
-function drawRectTexture() {
-  if (!gl) {
-    throw new Error('Texture resources not initialized')
-  }
-  gl.bindVertexArray(rectTextureVAO)
-  // setModelMatrix(identityMatrix)
   updateModelMatrix()
   setModelMatrix(modelMatrix)
-  gl.uniform1i(uUseTextureLocation, 1)
-  gl.drawArrays(gl.TRIANGLES, 0, 6)
-  gl.uniform1i(uUseTextureLocation, 0)
+  gl.drawArrays(gl.TRIANGLES, 0, 3)
 }
 
 function drawPoints() {
