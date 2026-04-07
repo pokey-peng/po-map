@@ -82,5 +82,19 @@ export const mapRoutes = [
     label: "WebGL三维",
     icon: "i-mdi-cube-outline",
     component: () => import('@/views/webgl/webGL-ThreeD.vue'),
+  },
+  {
+    path: '/webgl-cube',
+    name: 'WebglCube',
+    label: "WebGL立方体",
+    icon: "i-mdi-cube-outline",
+    component: () => import('@/views/webgl/webgl-cube.vue'),
+  },
+  {
+    path: '/webgl-light',
+    name: 'WebglLight',
+    label: "WebGL光照",
+    icon: "i-mdi-cube-outline",
+    component: () => import('@/views/webgl/webgl-light.vue'),
   }
 ]

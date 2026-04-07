@@ -3,15 +3,6 @@ import RadioButtonGroup from 'primevue/radiobuttongroup';
 
 import { createProgram, resizeCanvasToDisplaySize } from '@/lib/webGL/gl-help'
 import { Matrix4 } from '@/lib/webGL/Matrix4'
-interface TransformParam {
-  translateX: number
-  translateY: number
-  translateZ: number
-  scaleX: number
-  scaleY: number
-  scaleZ: number
-  rotateAngle: number
-}
 const canvas = ref<HTMLCanvasElement>()
 
 let gl: WebGL2RenderingContext | null = null
@@ -31,7 +22,7 @@ const projectionMatrix = new Matrix4()
 const mvpMatrix = new Matrix4()
 const identityMatrix = new Matrix4()
 
-const eye = ref({ x: 0, y: 0, z: 5 })
+const eye = ref({ x: -6, y: 2, z: 10 })
 
 const projectionType = ref<'ortho' | 'perspective'>('ortho')
 
@@ -44,7 +35,7 @@ let perfFrames = 0
 let perfTotalCost = 0
 let perfWindowStart = 0
 
-const transformParam = reactive<TransformParam>({
+const transformParam = reactive({
   translateX: 0,
   translateY: 0,
   translateZ: 0,
@@ -53,7 +44,6 @@ const transformParam = reactive<TransformParam>({
   scaleZ: 1,
   rotateAngle: 0,
 })
-
 
 /*------ Animation ------ */
 const rotatedSpeed = ref(30) // 度/秒
@@ -110,15 +100,12 @@ function handleKeyDown(event: KeyboardEvent) {
   requestRender()
 }
 function requestRender() {
-  console.log('Request render called, pending:', renderPending)
   if (renderPending) {
     return
   }
-  console.log('Request render')
   renderPending = true
   requestAnimationFrame(() => {
     renderPending = false
-    console.log('drawScene')
     drawScene()
   })
 }
@@ -205,44 +192,48 @@ function initVAOs() {
   }
   gl.bindBuffer(gl.ARRAY_BUFFER, coordinateBuffer)
   const coordinateData = new Float32Array([
-    -2, 0, 0, 1, 0,
-    2, 0, 0, 1, 0,
-    0, -1, 0, 1, 0,
-    0, 1, 0, 1, 0,
+    -10, 0, 0, 1, 0,
+    10, 0, 0, 1, 0,
+    0, -10, 0, 1, 0,
+    0, 10, 0, 1, 0,
   ])
   gl.bufferData(gl.ARRAY_BUFFER, coordinateData, gl.STATIC_DRAW)
 
   const elementBytes = coordinateData.BYTES_PER_ELEMENT
   // 位置属性
   gl.enableVertexAttribArray(aPositionLocation)
-  gl.vertexAttribPointer(aPositionLocation, 2, gl.FLOAT, false, elementBytes * 5, 0)
+  gl.vertexAttribPointer(aPositionLocation, 2, gl.FLOAT, false, elementBytes * 5 , 0)
   // 颜色属性
   gl.enableVertexAttribArray(aColorLocation)
-  gl.vertexAttribPointer(aColorLocation, 3, gl.FLOAT, false, elementBytes * 5, elementBytes * 2)
+  gl.vertexAttribPointer(aColorLocation, 3, gl.FLOAT, false, elementBytes * 5 , elementBytes * 2)
 
 
-  /*---- 绑定三角形VAO -----*/
+  /*---- 绑定正方形VAO -----*/
   gl.bindVertexArray(triangleVAO)
+
+  const vertices = new Float32Array([
+    1, 1, 1, 1, 0, 0,
+    -1, 1, 1, 0, 1, 0,
+    -1, -1, 1, 0, 0, 1,
+    1, -1, 1, 1, 1, 0,
+    1, 1, -1, 1.0, 0.4, 0.4,
+    -1, 1, -1, 1.0, 1.0, 0.4,
+    -1, -1, -1, 1, 1, 0.4,
+    1, -1, -1, 1.0, 0.4, 1,
+  ])
+
+  const indices = new Uint8Array([
+    0, 1, 2, 0, 2, 3, // 前
+    0, 1, 5, 0, 5, 4, // 上
+    1, 2, 6, 1, 6, 5, // 左
+    2, 3, 7, 2, 7, 6, // 下
+    3, 0, 4, 3, 4, 7, // 右
+    4, 5, 6, 4, 6, 7, // 后
+  ])
   const triangleBuffer = gl.createBuffer()
-  if (!triangleBuffer) {
-    throw new Error('triangleBuffer not created')
-  }
+  const indexBuffer = gl.createBuffer()
   gl.bindBuffer(gl.ARRAY_BUFFER, triangleBuffer)
-  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
-    0, 0.5, -0.5, 1, 0, 0,
-    -1, 0, -0.5, 0, 1, 0,
-    0, -0.5, -0.5, 0, 0, 1,
-
-    0.5, 0.4, -0.2, 1.0, 0.4, 0.4,
-    -0.5, 0.4, -0.2, 1.0, 1.0, 0.4,
-    0.0, -0.6, -0.2, 1, 1, 0.4,
-
-    0, 0.5, 0, 0.1, 0.4, 1,
-    -0.5, -0.5, 0, 0.2, 0.4, 1,
-    0.5, -0.5, 0, 0.5, 0.3, 0.4,
-
-
-  ]), gl.STATIC_DRAW)
+  gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW)
 
   // 位置属性
   gl.enableVertexAttribArray(aPositionLocation)
@@ -251,6 +242,8 @@ function initVAOs() {
   gl.enableVertexAttribArray(aColorLocation)
   gl.vertexAttribPointer(aColorLocation, 3, gl.FLOAT, false, elementBytes * 6, elementBytes * 3)
 
+  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer)
+  gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.STATIC_DRAW)
   /*---- 绑定点VAO -----*/
   gl.bindVertexArray(pointsVAO)
   const pointsBuffer = gl.createBuffer()
@@ -284,21 +277,8 @@ function drawScene() {
   drawCoordinate()
   drawPoints()
   gl.polygonOffset(1, 1) // 设置多边形偏移，避免填充的三角形和线框重叠时出现闪烁
-  // 绘制向左平移的三角形
 
-  drawTriangle(
-    {
-      ...transformParam,
-      translateX: transformParam.translateX - 0.8,
-    }
-  )
-
-  drawTriangle(
-    {
-      ...transformParam,
-      translateX: transformParam.translateX + 0.8,
-    }
-  )
+  drawTriangle()
 
 
   if (import.meta.env.DEV) {
@@ -322,14 +302,14 @@ function drawScene() {
   }
 }
 function updateProjectionMatrix(width: number, height: number) {
-  if (!gl) {
+  if (!gl ) {
     throw new Error('Required render resources are not initialized')
   }
   if (projectionType.value === 'perspective') {
     const aspect = width / height
     projectionMatrix.setPerspective(30, aspect, 0.1, 100)
   } else {
-    projectionMatrix.setOrtho(-2, 2, -1, 1, 0, 8)
+    projectionMatrix.setOrtho(-20, 20 , -10, 10, 0, 80)
   }
 }
 function updateViewportAndProjectionIfNeeded() {
@@ -359,14 +339,14 @@ function drawCoordinate() {
   gl.drawArrays(gl.LINES, 0, 4)
 }
 
-function drawTriangle(transform: TransformParam = transformParam) {
+function drawTriangle() {
   if (!gl) {
     throw new Error('Triangle resources not initialized')
   }
   gl.bindVertexArray(triangleVAO)
-  updateModelMatrix(transform)
+  updateModelMatrix()
   updateViewModelMatrix(modelMatrix)
-  gl.drawArrays(gl.TRIANGLES, 0, 9)
+  gl.drawElements(gl.TRIANGLES, 36, gl.UNSIGNED_BYTE, 0)
 }
 
 function drawPoints() {
@@ -393,11 +373,11 @@ function updateViewModelMatrix(modelMatrix: Matrix4) {
 /**
  * 更新模型变换矩阵
  */
-function updateModelMatrix(transform: TransformParam = transformParam) {
+function updateModelMatrix() {
   modelMatrix.setIdentity()
-  modelMatrix.translate(transform.translateX, transform.translateY, transform.translateZ)
-  modelMatrix.rotate(transform.rotateAngle, 0, 0, 1)
-  modelMatrix.scale(transform.scaleX, transform.scaleY, transform.scaleZ)
+  modelMatrix.translate(transformParam.translateX, transformParam.translateY, transformParam.translateZ)
+  modelMatrix.rotate(transformParam.rotateAngle, 0, 0, 1)
+  modelMatrix.scale(transformParam.scaleX, transformParam.scaleY, transformParam.scaleZ)
 }
 
 function reset() {
@@ -415,7 +395,8 @@ function reset() {
   <div class="webgl-transform relative w-full h-full">
     <canvas ref="canvas" class="w-full h-full" />
     <div
-      class="transform-controlbox absolute top-4 right-4 w-80 rounded-xl border border-gray-200 bg-white/90 p-4 shadow-lg backdrop-blur-sm">
+      class="transform-controlbox absolute top-4 right-4 w-80 rounded-xl border border-gray-200 bg-white/90 p-4 shadow-lg backdrop-blur-sm"
+    >
       <div class="mb-5 flex items-center justify-between">
         <span class="text-sm font-semibold text-gray-800">Transform</span>
         <span v-if="perfText" class="text-xs text-gray-500">{{ perfText }}</span>
@@ -501,17 +482,16 @@ function reset() {
       <div class="flex flex-col gap-2 mt-5">
         <span class="text-xs font-medium uppercase tracking-wide text-gray-500">Switch Project</span>
         <div class="flex items-center gap-3">
-          <RadioButtonGroup v-model="projectionType" class="flex items-center gap-4"
-            @update:model-value="() => { updateProjectionMatrix(canvas?.width || 1, canvas?.height || 1); requestRender() }">
+          <RadioButtonGroup v-model="projectionType" class="flex items-center gap-4" @update:model-value="() => { updateProjectionMatrix(canvas?.width || 1, canvas?.height || 1);  requestRender() }">
             <RadioButton value="ortho" inputId="ortho" />
             <label class="text-sm text-gray-700" for="ortho">Orthographic</label>
             <RadioButton value="perspective" inputId="perspective" />
-            <label class="text-sm text-gray-700" for="perspective">Perspective</label>
+             <label class="text-sm text-gray-700" for="perspective">Perspective</label>
           </RadioButtonGroup>
         </div>
       </div>
     </div>
-  </div>
+ </div>
 </template>
 
 <style lang="scss" scoped></style>
