@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
 import layout from '@/layout/index.vue'
 import { mapRoutes } from './mapRoutes'
+import { gisMapRoutes } from './gisMapRoutes'
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
@@ -15,7 +16,7 @@ const router = createRouter({
       name: 'layout',
       component: layout,
       redirect: '/map',
-      children: mapRoutes,
+      children: [...mapRoutes, ...gisMapRoutes],
     },
     {
       path: '/about',
@@ -27,5 +28,6 @@ const router = createRouter({
     },
   ],
 })
-
+export { mapRoutes } from './mapRoutes'
+export { gisMapRoutes } from './gisMapRoutes'
 export default router

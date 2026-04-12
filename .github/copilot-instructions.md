@@ -4,7 +4,7 @@
 - **Type**: Vue 3 + TypeScript project with multiple map technologies integration
 - **Build Tool**: Vite
 - **Package Manager**: pnpm
-- **Key Dependencies**: Vue 3, Vue Router, Pinia, Mapbox GL, Cesium, OpenLayers, Three.js, WebGL
+- **Key Dependencies**: Vue 3, Vue Router, Pinia, Mapbox GL, Cesium, OpenLayers, Three.js, WebGL, ArcGIS API for JavaScript, Unocss
 
 ## Architecture
 - **Layout System**: Main layout with sidebar and content areas (`src/layout/`)
@@ -44,6 +44,7 @@
 - **WebGL Usage**: Custom helper functions for shader creation, buffer management, and drawing operations
 - **Route Configuration**: Nested routes with layout-based navigation structure
 - **TypeScript Usage**: Strict typing for all components, utilities, and function parameters
+- **Styling**: Unocss for utility-first CSS, Use utility classes for layout and styling, then override with custom CSS when necessary
 
 ## External Dependencies
 - **Map Libraries**: Mapbox GL, Cesium, OpenLayers, Three.js
@@ -53,56 +54,6 @@
 - **Color**: chroma-js
 - **State Management**: Pinia
 - **Internationalization**: Vue I18n
-
-## Example Code Patterns
-
-### WebGL Shader Creation
-```typescript
-import { createProgram } from '@/lib/webGL/gl-help'
-
-const program = createProgram(
-  gl,
-  `#version 300 es
-     in vec4 a_Position;
-     void main() {
-        gl_Position = a_Position;
-        gl_PointSize = 10.0;
-     }
-  `,
-  `#version 300 es
-     precision highp float;
-     uniform vec4 u_Color;
-     out vec4 fragColor;
-     void main() {
-        fragColor = u_Color;
-     }
-  `,
-)
-```
-
-### Vue 3 Component with WebGL
-```vue
-<script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
-import { createProgram, resizeCanvasToDisplaySize } from '@/lib/webGL/gl-help'
-
-const canvas = ref<HTMLCanvasElement>()
-
-onMounted(() => {
-  // WebGL initialization and setup
-})
-
-onUnmounted(() => {
-  // Cleanup
-})
-</script>
-
-<template>
-  <div class="webgl-container">
-    <canvas ref="canvas" class="w-full h-full" />
-  </div>
-</template>
-```
 
 ## Development Tips
 - **Use TypeScript**: Leverage the full type system for better code completion and error checking

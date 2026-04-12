@@ -8,6 +8,7 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    ArcGisBasemapSwitcher: typeof import('./components/ArcGisBasemapSwitcher.vue')['default']
     Button: typeof import('primevue/button')['default']
     HelloWorld: typeof import('./components/HelloWorld.vue')['default']
     IconCommunity: typeof import('./components/icons/IconCommunity.vue')['default']

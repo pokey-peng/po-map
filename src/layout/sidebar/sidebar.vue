@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import {mapRoutes} from "@/router/mapRoutes"
+import { mapRoutes } from "@/router/mapRoutes"
+import { gisMapRoutes } from "@/router/gisMapRoutes"
 const route = useRoute()
 const activeMenu = computed(() => {
   // 获取当前路由的path,并与菜单项的path进行匹配
@@ -10,9 +11,9 @@ const activeMenu = computed(() => {
 })
 const menus = ref([
   {
-    label: 'Map',
-    icon: 'i-mdi-map text-green-500',
-    key: 'Map',
+    label: '3D World',
+    icon: ' i-mdi-earth text-green-500',
+    key: 'ThreeDWorld',
     items: [
       { label: 'Mapbox GL', icon: 'i-mdi-map-marker', route: '/map' },
       { label: 'webgl', icon: 'i-mdi-cube-outline', route: '/webgl-demo' },
@@ -22,6 +23,12 @@ const menus = ref([
       { label: '加载Obj', icon: 'i-mdi-cube-outline', route: '/webgl-load-obj' },
       { label: '3d', icon: 'i-mdi-cube-outline', route: '/webgl-3d' },
     ],
+  },
+  {
+    label: 'GisMap',
+    icon: 'i-mdi-map-marker text-green-500',
+    key: 'Map',
+    items: [],
   },
   {
     label: 'Dashboard',
@@ -46,6 +53,17 @@ mapRoutes.forEach((route) => {
     })
   }
 })
+gisMapRoutes.forEach((route) => {
+  const menu = menus.value[1];
+  if (!menu.items.find((item) => item.route === route.path)) {
+    menu.items.push({
+      label: route.label ?? route.name,
+      icon: route.icon ?? 'i-mdi-cube-outline',
+      route: route.path
+    })
+  }
+})
+
 const expandedKeys = ref({
   Map: true,
   Dashboard: false,

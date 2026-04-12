@@ -17,6 +17,7 @@ import { createI18n } from 'vue-i18n'
 
 window.CESIUM_BASE_URL = 'http://localhost:8080/Cesium-1.126/Build/Cesium';
 
+
 const i18n = createI18n({
   locale: 'zh',
   messages: {
