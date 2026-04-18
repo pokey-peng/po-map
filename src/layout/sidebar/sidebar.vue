@@ -15,7 +15,6 @@ const menus = ref([
     icon: ' i-mdi-earth text-green-500',
     key: 'ThreeDWorld',
     items: [
-      { label: 'Mapbox GL', icon: 'i-mdi-map-marker', route: '/map' },
       { label: 'webgl', icon: 'i-mdi-cube-outline', route: '/webgl-demo' },
       { label: 'Three.js', icon: 'i-mdi-rotate-3d', route: '/threejs-demo' },
       { label: '矩阵工具', icon: 'i-mdi-matrix', route: '/matrix-demo' },

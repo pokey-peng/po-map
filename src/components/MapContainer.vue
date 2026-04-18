@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import mapboxgl from 'mapbox-gl'
-// mapboxgl.accessToken =
-//   'pk.eyJ1IjoicG9rZXljbiIsImEiOiJja3cxZmUybjQxeGk3Mm5waDdsNWV5N3M4In0.gojToYsF2FTweJDayCScNQ'
-const yourToken = '417f7cdea0782e3941b99a29a76f99a8'
+mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN
+const yourToken = import.meta.env.VITE_TDT_TOKEN
 const emits = defineEmits(['onMapLoad'])
 const isLoading = ref(true)
 onMounted(() => {

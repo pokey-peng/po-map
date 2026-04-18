@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import Map from '@arcgis/core/Map'
+import EsriMap from '@arcgis/core/Map'
 import Basemap from '@arcgis/core/Basemap'
 import FeatureLayer from '@arcgis/core/layers/FeatureLayer'
 import WebTileLayer from '@arcgis/core/layers/WebTileLayer'
@@ -8,7 +8,7 @@ import Point from '@arcgis/core/geometry/Point'
 import SceneView from '@arcgis/core/views/SceneView'
 import '@arcgis/core/assets/esri/themes/light/main.css'
 import LabelIcon from '@/assets/map/label_bg.png'
-
+import Popup from './popup.vue'
 type BasemapType = 'vector' | 'imagery'
 
 type CapitalFeatureCollection = {
@@ -62,7 +62,39 @@ const switchBasemap = (type: BasemapType) => {
     view.map.basemap = basemapOptions[type]
   }
 }
-
+const popupMap = new Map<number, any>() // 存储 Graphic ID 与 Vue Popup 实例的映射关系
+function cleanVuePopups(id: number | number[] | null) {
+  if (id === null) {
+    popupMap.forEach((popupApp) => {
+      popupApp.unmount()
+    })
+    popupMap.clear()
+  } else {
+    const ids = Array.isArray(id) ? id : [id]
+    ids.forEach((featureId) => {
+      const popupApp = popupMap.get(featureId)
+      if (popupApp) {
+        popupApp.unmount()
+        popupMap.delete(featureId)
+      }
+    })
+  }
+}
+function createVuePopupTemplate() {
+  return {
+    title: '{capital}',
+    content: (feature: any) => {
+      const container = document.createElement('div')
+      console.log('Creating popup for feature:', feature)
+      const popupApp = createApp(Popup, {
+        attrs: feature.graphic.attributes,
+      })
+      popupMap.set(feature.graphic.attributes.ObjectID, popupApp) // 使用 ObjectID 作为键
+      popupApp.mount(container)
+      return container
+    },
+  }
+}
 const createCapitalLayer = async () => {
   const response = await fetch('/data/china-provincial-capitals.geojson')
 
@@ -97,10 +129,7 @@ const createCapitalLayer = async () => {
       { name: 'province', alias: '省级行政区', type: 'string' },
       { name: 'capital', alias: '首府', type: 'string' },
     ],
-    popupTemplate: {
-      title: '{capital}',
-      content: '所属省级行政区：{province}',
-    },
+    popupTemplate: createVuePopupTemplate(),
     elevationInfo: {
       mode: 'on-the-ground',
     },
@@ -181,7 +210,7 @@ const createCapitalLayer = async () => {
   })
 }
 onMounted(async () => {
-  const map = new Map({
+  const map = new EsriMap({
     basemap: basemapOptions.vector,
     ground: 'world-elevation',
   })
@@ -198,7 +227,9 @@ onMounted(async () => {
       tilt: 0,
     },
   })
-
+  viewRef.value.on('click', () => {
+    cleanVuePopups(null) // 点击地图其他位置时关闭所有弹窗
+  })
   try {
     const capitalLayer = await createCapitalLayer()
     map.add(capitalLayer)

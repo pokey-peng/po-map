@@ -15,7 +15,7 @@ import PrimeVue from 'primevue/config'
 import Aura from '@primeuix/themes/aura'
 import { createI18n } from 'vue-i18n'
 
-window.CESIUM_BASE_URL = 'http://localhost:8080/Cesium-1.126/Build/Cesium';
+window.CESIUM_BASE_URL = 'http://localhost:6688/Cesium-1.137/Build/Cesium';
 
 
 const i18n = createI18n({

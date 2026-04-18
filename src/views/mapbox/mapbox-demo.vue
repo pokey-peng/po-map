@@ -4,8 +4,8 @@ const coords = ref({ lng: 0, lat: 0 })
 const useMapMove = () => {
   mapbox.value?.on('mousemove', (e: mapboxgl.MapMouseEvent) => {
     // 获取鼠标移动时的经纬度
-    coords.value.lng = Number(e.lngLat.lng).toFixed(6)
-    coords.value.lat = Number(e.lngLat.lat).toFixed(6)
+    coords.value.lng = +Number(e.lngLat.lng).toFixed(6)
+    coords.value.lat = +Number(e.lngLat.lat).toFixed(6)
   })
 }
 const handleMapLoad = (map: mapboxgl.Map) => {

@@ -1,10 +1,5 @@
 export const mapRoutes = [
   {
-    path: '/map',
-    name: 'map',
-    component: () => import('@/views/mapbox/mapbox-demo.vue'),
-  },
-  {
     path: '/webgl-demo',
     name: 'WebglDemo',
     component: () => import('@/views/webgl/webgl-demo.vue'),
@@ -34,20 +29,7 @@ export const mapRoutes = [
     name: 'WebGl3d',
     component: () => import('@/views/webgl/webgl-3d.vue'),
   },
-  {
-    path: '/hello-cesium',
-    name: 'HelloCesium',
-    label: "Cesium初见",
-    icon: "i-mdi-cube-outline",
-    component: () => import('@/views/cesium/HelloCesium.vue'),
-  },
-  {
-    path: '/hello-openlayers',
-    name: 'HelloOpenLayers',
-    label: "OpenLayers初见",
-    icon: "i-mdi-cube-outline",
-    component: () => import('@/views/ol/HelloOpenLayers.vue'),
-  },
+
   {
     path: '/webgl-points',
     name: 'WebglPoints',
