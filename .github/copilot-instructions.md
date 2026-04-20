@@ -68,3 +68,6 @@
 - **Cesium**: Verify the `CESIUM_BASE_URL` is correctly set
 - **TypeScript Errors**: Run `pnpm type-check` to identify and fix type issues
 - **Linting**: Use `pnpm lint` to maintain code quality and consistency
+
+## Git Conventions
+- **Commit Messages**: Use clear and descriptive commit messages following the Conventional Commits format;Alawys write commit messages in Chinese for better collaboration and understanding across the team.
