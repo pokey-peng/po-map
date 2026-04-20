@@ -78,5 +78,19 @@ export const mapRoutes = [
     label: "WebGL光照",
     icon: "i-mdi-cube-outline",
     component: () => import('@/views/webgl/webgl-light.vue'),
+  },
+  {
+    path: '/webgl-light-two',
+    name: 'WebglLightTwo',
+    label: "WebGL光照2",
+    icon: "i-mdi-cube-outline",
+    component: () => import('@/views/webgl/webgl-light-two.vue'),
+  },
+  {
+    path: '/webgl-joint-model',
+    name: 'WebglJointModel',
+    label: "WebGL关节模型",
+    icon: "i-mdi-cube-outline",
+    component: () => import('@/views/webgl/webgl-joint-model.vue'),
   }
 ]

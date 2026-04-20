@@ -22,7 +22,7 @@ const projectionMatrix = new Matrix4()
 const mvpMatrix = new Matrix4()
 const identityMatrix = new Matrix4()
 
-const eye = ref({ x: -6, y: 2, z: 10 })
+const eye = ref({ x: 20, y: 20, z: 30 })
 const projectionType = ref<'ortho' | 'perspective'>('perspective')
 const isPanelCollapsed = ref(true)
 
@@ -124,15 +124,27 @@ function mapCleanup() {
   gl = null
 }
 
+const ANGLE_STEP = 3
+let g_arm1Angle = 90
+let g_joint1Angle = 0
+
 function handleKeyDown(event: KeyboardEvent) {
   if (event.code === 'ArrowLeft') {
-    eye.value.x -= 0.05
+    eye.value.x -= 1
   } else if (event.code === 'ArrowRight') {
-    eye.value.x += 0.05
+    eye.value.x += 1
   } else if (event.code === 'ArrowUp') {
-    eye.value.z += 0.05
+    eye.value.z += 1
   } else if (event.code === 'ArrowDown') {
-    eye.value.z -= 0.05
+    eye.value.z -= 1
+  } else if (event.code === 'KeyA') {
+    g_arm1Angle = (g_arm1Angle + ANGLE_STEP) % 360
+  } else if (event.code === 'KeyD') {
+    g_arm1Angle = (g_arm1Angle - ANGLE_STEP + 360) % 360
+  } else if (event.code === 'KeyW') {
+    g_joint1Angle = Math.min(g_joint1Angle + ANGLE_STEP, 135)
+  } else if (event.code === 'KeyS') {
+    g_joint1Angle = Math.max(g_joint1Angle - ANGLE_STEP, -135)
   } else {
     return
   }
@@ -274,27 +286,30 @@ function initVAOs() {
 
   gl.bindVertexArray(triangleVAO)
   const vertices = new Float32Array([
-   // 前面 (z = 1)
-    1, 1, 1, 1, 1, 1, -1, 1, 1, 1, 1, 1, -1, -1, 1, 1, 1, 1, 1, -1, 1, 1, 1, 1,
-    // 右面 (x = 1)
-    1, 1, 1, 1, 1, 1, 1, -1, 1, 1, 1, 1, 1, -1, -1, 1, 1, 1, 1, 1, -1, 1, 1, 1,
-    // 上面 (y = 1)
-    1, 1, 1, 1, 1, 1, 1, 1, -1, 1, 1, 1, -1, 1, -1, 1, 1, 1, -1, 1, 1, 1, 1, 1,
-    // 左面 (x = -1)
-    -1, 1, 1, 1, 1, 1, -1, 1, -1, 1, 1, 1, -1, -1, -1, 1, 1, 1, -1, -1, 1, 1, 1, 1,
-    // 下面 (y = -1)
-    -1, -1, -1, 1, 1, 1, 1, -1, -1, 1, 1, 1, 1, -1, 1, 1, 1, 1, -1, -1, 1, 1, 1, 1,
-    // 后面 (z = -1)
-    1, 1, -1, 1, 1, 1, 1, -1, -1, 1, 1, 1, -1, -1, -1, 1, 1, 1, -1, 1, -1, 1, 1, 1,
+   // 前面 (z = 2)
+    2, 10, 2, 1, 1, 1, -2, 10, 2, 1, 1, 1, -2, 0, 2, 1, 1, 1, 2, 0, 2, 1, 1, 1,
+    // 右面 (x = 2)
+    2, 10, 2, 1, 1, 1, 2, 0, 2, 1, 1, 1, 2, 0, -2, 1, 1, 1, 2, 10, -2, 1, 1, 1,
+    // 上面 (y = 10)
+    2, 10, 2, 1, 1, 1, 2, 10, -2, 1, 1, 1, -2, 10, -2, 1, 1, 1, -2, 10, 2, 1, 1, 1,
+    // 左面 (x = -2)
+    -2, 10, -2, 1, 1, 1,-2, 0, -2,  1, 1, 1, -2, 0, 2,1, 1, 1,-2, 10, 2, 1, 1, 1,
+    // 下面 (y = 0)
+    -2, 0, -2, 1, 1, 1, 2, 0, -2, 1, 1, 1, 2, 0, 2, 1, 1, 1, -2, 0, 2, 1, 1, 1,
+    // 后面 (z = -2)
+    -2, 10, -2, 1, 1, 1,2, 10, -2, 1, 1, 1, 2, 0, -2, 1, 1, 1, -2, 0, -2, 1, 1, 1,
   ])
   const indices = new Uint8Array([
     0, 1, 2, 0, 2, 3, 4, 5, 6, 4, 6, 7, 8, 9, 10, 8, 10, 11, 12, 13, 14, 12, 14, 15, 16, 17, 18, 16,
     18, 19, 20, 21, 22, 20, 22, 23,
   ])
   const normals = new Float32Array([
-    0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1,
-    0, 0, 1, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0,
-    0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1,
+    0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1,
+    1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0,
+    0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0,
+    -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0,
+    0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0,
+    0,0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1,
   ])
   const triangleBuffer = gl.createBuffer()
   const indexBuffer = gl.createBuffer()
@@ -394,7 +409,7 @@ function updateProjectionMatrix(width: number, height: number) {
 
   if (projectionType.value === 'perspective') {
     const aspect = width / height
-    projectionMatrix.setPerspective(30, aspect, 0.1, 100)
+    projectionMatrix.setPerspective(50, aspect, 1, 100)
   } else {
     projectionMatrix.setOrtho(-20, 20, -10, 10, 0, 80)
   }
@@ -435,10 +450,28 @@ function drawTriangle() {
   }
 
   gl.bindVertexArray(triangleVAO)
-  updateModelMatrix()
+  // updateModelMatrix()
+  // updateViewModelMatrix(modelMatrix)
+  // updateNormalMatrix(modelMatrix)
+  // gl.drawElements(gl.TRIANGLES, 36, gl.UNSIGNED_BYTE, 0)
+
+  // arm1
+  const arm1Length = 10
+  modelMatrix.setIdentity()
+  modelMatrix.translate(0, -12, 0)
+  modelMatrix.rotate(g_arm1Angle, 0, 1, 0)
   updateViewModelMatrix(modelMatrix)
   updateNormalMatrix(modelMatrix)
   gl.drawElements(gl.TRIANGLES, 36, gl.UNSIGNED_BYTE, 0)
+
+  // arm2
+  modelMatrix.translate(0, arm1Length, 0)
+  modelMatrix.rotate(g_joint1Angle, 0, 0, 1)
+  modelMatrix.scale(1.3, 1, 1.3)
+  updateViewModelMatrix(modelMatrix)
+  updateNormalMatrix(modelMatrix)
+  gl.drawElements(gl.TRIANGLES, 36, gl.UNSIGNED_BYTE, 0)
+
 }
 
 function drawPoints() {
@@ -471,7 +504,7 @@ function updateViewModelMatrix(currentModelMatrix: Matrix4) {
   }
 
   viewModelMatrix.setIdentity()
-  viewModelMatrix.setLookAt(eye.value.x, eye.value.y, eye.value.z, 0, 0, -1, 0, 1, 0)
+  viewModelMatrix.setLookAt(eye.value.x, eye.value.y, eye.value.z, 0, 0, 0, 0, 1, 0)
   mvpMatrix.set(projectionMatrix).multiply(viewModelMatrix).multiply(currentModelMatrix)
   gl.uniformMatrix4fv(mvpMatrixLocation, false, mvpMatrix.elements)
 }
@@ -538,9 +571,9 @@ function reset() {
             <Slider
               v-model="transformParam.translateX"
               class="flex-1"
-              :min="-1"
-              :max="1"
-              :step="0.01"
+              :min="-10"
+              :max="10"
+              :step="0.1"
             />
             <span class="w-12 text-right text-xs text-gray-600">{{
               transformParam.translateX.toFixed(2)
@@ -551,9 +584,9 @@ function reset() {
             <Slider
               v-model="transformParam.translateY"
               class="flex-1"
-              :min="-1"
-              :max="1"
-              :step="0.01"
+              :min="-10"
+              :max="10"
+              :step="0.1"
             />
             <span class="w-12 text-right text-xs text-gray-600">{{
               transformParam.translateY.toFixed(2)
@@ -564,9 +597,9 @@ function reset() {
             <Slider
               v-model="transformParam.translateZ"
               class="flex-1"
-              :min="-1"
-              :max="1"
-              :step="0.01"
+              :min="-10"
+              :max="10"
+              :step="0.1"
             />
             <span class="w-12 text-right text-xs text-gray-600">{{
               transformParam.translateZ.toFixed(2)

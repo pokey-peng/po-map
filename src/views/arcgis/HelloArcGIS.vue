@@ -6,6 +6,7 @@ import WebTileLayer from '@arcgis/core/layers/WebTileLayer'
 import Graphic from '@arcgis/core/Graphic'
 import Point from '@arcgis/core/geometry/Point'
 import SceneView from '@arcgis/core/views/SceneView'
+import Mesh from '@arcgis/core/geometry/Mesh'
 import '@arcgis/core/assets/esri/themes/light/main.css'
 import LabelIcon from '@/assets/map/label_bg.png'
 import Popup from './popup.vue'
@@ -139,19 +140,19 @@ const createCapitalLayer = async () => {
         type: 'cim',
         data: {
           type: 'CIMSymbolReference',
-          // primitiveOverrides: [
-          //   {
-          //     type: 'CIMPrimitiveOverride',
-          //     primitiveName: 'textGraphic',
-          //     propertyName: 'TextString',
-          //     valueExpressionInfo: {
-          //       type: 'CIMExpressionInfo',
-          //       title: 'Custom',
-          //       expression: '$feature.capital', // 映射到首府名称属性
-          //       returnType: 'Default',
-          //     },
-          //   },
-          // ],
+          primitiveOverrides: [
+            {
+              type: 'CIMPrimitiveOverride',
+              primitiveName: 'textGraphic',
+              propertyName: 'TextString',
+              valueExpressionInfo: {
+                type: 'CIMExpressionInfo',
+                title: 'Custom',
+                expression: '$feature.capital', // 映射到首府名称属性
+                returnType: 'Default',
+              },
+            },
+          ],
           symbol: {
             type: 'CIMPointSymbol',
             symbolLayers: [
@@ -209,6 +210,145 @@ const createCapitalLayer = async () => {
     },
   })
 }
+function createLinearGradient(color: string) {
+  // 透明度
+  const globalAlpha = 1
+  const canvas = document.createElement('canvas')
+  const width = 32 * 32
+  const height = 32 * 32
+  canvas.width = width
+  canvas.height = height
+  const ctx = canvas.getContext('2d')
+  if (!ctx) {
+    throw new Error('无法获取 Canvas 2D 上下文')
+  }
+  ctx.globalAlpha = globalAlpha
+
+  // Create the linear gradient with which to fill the canvas
+  const gradient = ctx.createLinearGradient(0, height, 0, 0)
+  // let colorStr = ''
+  // colorStr = typeof color === 'string' ? color : `rgba()`
+  // 这里创建三个渐变色，可随意调整
+  gradient.addColorStop(0, color || '#0000ff')
+  gradient.addColorStop(0.33, color)
+  //color.replace('1)', '0.2)')
+  // gradient.addColorStop(0.5,color.replace('1)', '0.5)'));
+  // gradient.addColorStop(0.67, color === 'rgba(1, 149, 105,1)'?'rgba(120, 255, 248,1)':'rgba(199, 168, 255,1)');
+  // gradient.addColorStop(0.67, color);
+  gradient.addColorStop(
+    0.667,
+    color === 'rgba(1, 149, 105,1)' ? 'rgba(120, 255, 248,1)' : 'rgba(199, 168, 255,1)',
+  )
+  gradient.addColorStop(
+    0.667,
+    color === 'rgba(1, 149, 105,1)' ? 'rgba(61, 195, 179,1)' : 'rgba(117, 80, 255,1)',
+  )
+  gradient.addColorStop(
+    1,
+    color === 'rgba(1, 149, 105,1)' ? 'rgba(61, 195, 179,1)' : 'rgba(117, 80, 255,1)',
+  )
+  // Fill the canvas with the gradient pattern
+  ctx.fillStyle = gradient
+  ctx.fillRect(0, 0, width, height)
+
+  return canvas
+}
+async function createBarChartLayer() {
+  const response = await fetch('/data/china-provincial-capitals.geojson')
+
+  if (!response.ok) {
+    throw new Error(`首府点位数据加载失败: ${response.status}`)
+  }
+
+  const geojson = (await response.json()) as CapitalFeatureCollection
+  const source = geojson.features.map((feature, index) => {
+    const meshBar = Mesh.createCylinder(
+      new Point({
+        longitude: feature.geometry.coordinates[0],
+        latitude: feature.geometry.coordinates[1],
+        spatialReference: { wkid: 4326 },
+      }),
+      {
+        size: {
+          width: 10000,
+          height: 50000,
+          depth: 10000,
+        },
+        material: {
+          color: [255,255,255,1],
+          colorTexture: createLinearGradient('rgba(1, 149, 105,1)'),
+          // doubleSided: true,
+          // alphaMode: 'auto',
+        },
+      },
+    )
+    return new Graphic({
+      geometry: meshBar,
+      attributes: {
+        ObjectID: index + 1,
+        province: feature.properties.province,
+        capital: feature.properties.capital,
+      },
+    })
+  })
+  const source2 = geojson.features.map((feature, index) => {
+    const meshBar = Mesh.createCylinder(
+      new Point({
+        longitude: feature.geometry.coordinates[0] + 0.15, // 偏移经度以避免与第一个图层重叠
+        latitude: feature.geometry.coordinates[1],
+        spatialReference: { wkid: 4326 },
+      }),
+      {
+        size: {
+          width: 10000,
+          height: 50000,
+          depth: 10000,
+        },
+        material: {
+          color: [255,255,255,1],
+          colorTexture: createLinearGradient('rgba(114, 34, 255,1)'),
+          doubleSided: true,
+          alphaMode: 'auto',
+        },
+      },
+    )
+    return new Graphic({
+      geometry: meshBar,
+      attributes: {
+        ObjectID: index + 1 + geojson.features.length, // 确保 ObjectID 唯一
+        province: feature.properties.province,
+        capital: feature.properties.capital,
+      },
+    })
+  })
+  return new FeatureLayer({
+    title: '中国各省级行政区首府',
+    source: [...source, ...source2],
+    objectIdField: 'ObjectID',
+    geometryType: 'mesh',
+    spatialReference: { wkid: 4326 },
+    fields: [
+      { name: 'ObjectID', alias: 'ObjectID', type: 'oid' },
+      { name: 'province', alias: '省级行政区', type: 'string' },
+      { name: 'capital', alias: '首府', type: 'string' },
+    ],
+    renderer: {
+      type: 'simple',
+      symbol: {
+        type: 'mesh-3d',
+        symbolLayers: [
+          {
+            type: 'fill',
+            material: {
+              color: [255, 255, 255, 1],
+              colorMixMode: 'multiply',
+            },
+          },
+        ],
+      },
+    },
+  })
+}
 onMounted(async () => {
   const map = new EsriMap({
     basemap: basemapOptions.vector,
@@ -230,9 +370,22 @@ onMounted(async () => {
   viewRef.value.on('click', () => {
     cleanVuePopups(null) // 点击地图其他位置时关闭所有弹窗
   })
+  viewRef.value.environment = {
+  atmosphereEnabled: false,
+  starsEnabled: false,
+    lighting: {
+    type: 'virtual',
+      directShadowsEnabled: false,
+      glow: {
+      intensity: 1,
+    }
+  }
+}
   try {
     const capitalLayer = await createCapitalLayer()
     map.add(capitalLayer)
+    const barChartLayer = await createBarChartLayer()
+    map.add(barChartLayer)
   } catch (error) {
     console.error(error)
   }

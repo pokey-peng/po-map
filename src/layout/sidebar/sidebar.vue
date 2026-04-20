@@ -70,7 +70,7 @@ const expandedKeys = ref({
 </script>
 
 <template>
-  <aside class="p-2 shadow-lg h-full">
+  <aside class="p-2 shadow-lg h-full max-h-[calc(100vh-96px)] overflow-y-auto">
     <PanelMenu :model="menus" multiple v-model:expanded-keys="expandedKeys">
       <template #item="{ item }">
         <router-link
