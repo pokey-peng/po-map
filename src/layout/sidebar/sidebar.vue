@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { mapRoutes } from "@/router/mapRoutes"
 import { gisMapRoutes } from "@/router/gisMapRoutes"
+import { threejsRoutes } from "@/router"
 const route = useRoute()
 const activeMenu = computed(() => {
   // 获取当前路由的path,并与菜单项的path进行匹配
@@ -27,6 +28,12 @@ const menus = ref([
     label: 'GisMap',
     icon: 'i-mdi-map-marker text-green-500',
     key: 'Map',
+    items: [],
+  },
+  {
+    label: 'Three.js',
+    icon: 'i-mdi-rotate-3d text-purple-500',
+    key: 'Threejs',
     items: [],
   },
   {
@@ -62,7 +69,16 @@ gisMapRoutes.forEach((route) => {
     })
   }
 })
-
+threejsRoutes.forEach((route) => {
+  const menu = menus.value[2];
+  if (!menu.items.find((item) => item.route === route.path)) {
+    menu.items.push({
+      label: route.label ?? route.name,
+      icon: route.icon ?? 'i-mdi-cube-outline',
+      route: route.path
+    })
+  }
+})
 const expandedKeys = ref({
   Map: true,
   Dashboard: false,

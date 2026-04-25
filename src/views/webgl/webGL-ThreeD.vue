@@ -135,6 +135,8 @@ function renderGl() {
   gl.viewport(0, 0, canvas.value.width, canvas.value.height)
   gl.enable(gl.DEPTH_TEST)
   gl.enable(gl.POLYGON_OFFSET_FILL)
+  gl.enable(gl.BLEND)
+  gl.blendFunc(gl.SRC_ALPHA, gl.ONE)
   gl.clearColor(0, 0, 0, 1)
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
@@ -229,27 +231,27 @@ function initVAOs() {
   }
   gl.bindBuffer(gl.ARRAY_BUFFER, triangleBuffer)
   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
-    0, 0.5, -0.5, 1, 0, 0,
-    -1, 0, -0.5, 0, 1, 0,
-    0, -0.5, -0.5, 0, 0, 1,
+    0, 0.5, -0.5, 1, 0, 0, 0.4,
+    -1, 0, -0.5, 0, 1, 0, 0.4,
+    0, -0.5, -0.5, 0, 0, 1, 0.4,
 
-    0.5, 0.4, -0.2, 1.0, 0.4, 0.4,
-    -0.5, 0.4, -0.2, 1.0, 1.0, 0.4,
-    0.0, -0.6, -0.2, 1, 1, 0.4,
+    0.5, 0.4, -0.2, 1.0, 0.4, 0.4,0.4,
+    -0.5, 0.4, -0.2, 1.0, 1.0, 0.4,0.4,
+    0.0, -0.6, -0.2, 1, 1, 0.4,0.4,
 
-    0, 0.5, 0, 0.1, 0.4, 1,
-    -0.5, -0.5, 0, 0.2, 0.4, 1,
-    0.5, -0.5, 0, 0.5, 0.3, 0.4,
+    0, 0.5, 0, 0.1, 0.4, 1, 0.4,
+    -0.5, -0.5, 0, 0.2, 0.4, 1,0.4,
+    0.5, -0.5, 0, 0.5, 0.3, 0.4,0.4,
 
 
   ]), gl.STATIC_DRAW)
 
   // 位置属性
   gl.enableVertexAttribArray(aPositionLocation)
-  gl.vertexAttribPointer(aPositionLocation, 3, gl.FLOAT, false, elementBytes * 6, 0)
+  gl.vertexAttribPointer(aPositionLocation, 3, gl.FLOAT, false, elementBytes * 7, 0)
   // 颜色属性
   gl.enableVertexAttribArray(aColorLocation)
-  gl.vertexAttribPointer(aColorLocation, 3, gl.FLOAT, false, elementBytes * 6, elementBytes * 3)
+  gl.vertexAttribPointer(aColorLocation, 4, gl.FLOAT, false, elementBytes * 7, elementBytes * 3)
 
   /*---- 绑定点VAO -----*/
   gl.bindVertexArray(pointsVAO)

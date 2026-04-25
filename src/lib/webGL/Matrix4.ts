@@ -66,6 +66,11 @@ export class Vector4 {
       0
     )
   }
+
+  [Symbol.iterator]() {
+    return [this.x, this.y, this.z, this.w][Symbol.iterator]()
+  }
+
 }
 
 export class Vector3 {
@@ -104,6 +109,10 @@ export class Vector3 {
   }
   get elements(): Float32Array {
     return new Float32Array([this.x, this.y, this.z])
+  }
+
+  [Symbol.iterator]() {
+    return [this.x, this.y, this.z][Symbol.iterator]()
   }
 }
 
@@ -352,6 +361,10 @@ class Matrix4 extends Matrix implements IMatrix {
     }
     this._elements.set(result)
   }
+
+  [Symbol.iterator]() {
+    return this._elements[Symbol.iterator]()
+  }
 }
 
 class Matrix3 extends Matrix implements IMatrix {
@@ -436,6 +449,9 @@ class Matrix3 extends Matrix implements IMatrix {
       m[2], m[5], m[8]
     ])
     return to || this
+  }
+  [Symbol.iterator]() {
+    return this._elements[Symbol.iterator]()
   }
 }
 

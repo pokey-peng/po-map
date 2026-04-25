@@ -14,6 +14,8 @@ onMounted(() => {
   gl.viewport(0, 0, canvas.value.width, canvas.value.height)
   gl.clearColor(0, 0, 0, 1)
   gl.clear(gl.COLOR_BUFFER_BIT)
+  gl.enable(gl.BLEND)
+  gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
 
   const program = createProgram(
     gl,
@@ -21,7 +23,7 @@ onMounted(() => {
        in vec4 a_Position;
        void main() {
           gl_Position = a_Position;
-          gl_PointSize = 10.0;
+          gl_PointSize = 20.0;
        }
     `,
     `#version 300 es
@@ -29,7 +31,11 @@ onMounted(() => {
        uniform vec4 u_Color;
        out vec4 fragColor;
        void main() {
-          fragColor = u_Color;
+        vec2 centered = gl_PointCoord - vec2(0.5);
+        float dist = length(centered);
+        float aa = fwidth(dist);
+        float alpha = 1.0 - smoothstep(0.5 - aa, 0.5 + aa, dist);
+        fragColor = vec4(u_Color.rgb, u_Color.a * alpha);
        }
     `,
   )
@@ -42,7 +48,6 @@ onMounted(() => {
     throw new Error('a_Buffer buffer not created')
   }
   gl.bindBuffer(gl.ARRAY_BUFFER, a_Buffer)
-
 
   const u_Color = gl.getUniformLocation(program, 'u_Color')
   if (!u_Color) {
@@ -83,10 +88,11 @@ function handleClick(
   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(gl_Points), gl.STATIC_DRAW)
   gl.vertexAttribPointer(a_Position, 2, gl.FLOAT, false, 0, 0)
   gl.enableVertexAttribArray(a_Position)
-  for (let i = 0;  i< gl_Points.length; i += 2) {
-    gl.uniform4f(u_Color, gl_Colors[i], gl_Colors[i + 1], gl_Colors[i + 2], 1)
-    // gl.drawArrays(gl.POINTS, i / 2 , 1)
-    gl.drawArrays(gl.LINES, i / 2-1, 2)
+  for (let i = 0; i < gl_Points.length / 2; i++) {
+    const colorIndex = i * 3
+    gl.uniform4f(u_Color, gl_Colors[colorIndex], gl_Colors[colorIndex + 1], gl_Colors[colorIndex + 2], 1)
+    gl.drawArrays(gl.POINTS, i, 1)
+    //gl.drawArrays(gl.LINES, i / 2-1, 2)
   }
   //gl.drawArrays(gl.LINES, 0 , gl_Points.length / 2)
 }

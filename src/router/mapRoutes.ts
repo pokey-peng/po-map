@@ -5,11 +5,6 @@ export const mapRoutes = [
     component: () => import('@/views/webgl/webgl-demo.vue'),
   },
   {
-    path: '/threejs-demo',
-    name: 'ThreejsDemo',
-    component: () => import('@/views/threejs/threejs-demo.vue'),
-  },
-  {
     path: '/matrix-demo',
     name: 'MatrixDemo',
     component: () => import('@/views/matrix/MatrixDemo.vue'),
@@ -92,5 +87,19 @@ export const mapRoutes = [
     label: "WebGL关节模型",
     icon: "i-mdi-cube-outline",
     component: () => import('@/views/webgl/webgl-joint-model.vue'),
+  },
+  {
+    path: '/webgl-atomization',
+    name: 'WebglAtomization',
+    label: "WebGL雾化",
+    icon: "i-mdi-cube-outline",
+    component: () => import('@/views/webgl/webgl-atomization.vue'),
+  },
+  {
+    path: '/webgl-multi-programs',
+    name: 'WebglMultiPrograms',
+    label: "WebGL多程序",
+    icon: "i-mdi-cube-outline",
+    component: () => import('@/views/webgl/webgl-multi-programs.vue'),
   }
 ]
