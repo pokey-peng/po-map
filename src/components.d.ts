@@ -8,6 +8,7 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    AiChartPanel: typeof import('./components/ai/AiChartPanel.vue')['default']
     ArcGisBasemapSwitcher: typeof import('./components/ArcGisBasemapSwitcher.vue')['default']
     Button: typeof import('primevue/button')['default']
     HelloWorld: typeof import('./components/HelloWorld.vue')['default']
@@ -26,6 +27,7 @@ declare module 'vue' {
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     Slider: typeof import('primevue/slider')['default']
+    TChatbot: typeof import('@tdesign-vue-next/chat')['Chatbot']
     TheWelcome: typeof import('./components/TheWelcome.vue')['default']
     WelcomeItem: typeof import('./components/WelcomeItem.vue')['default']
   }

@@ -5,7 +5,7 @@
   "exclude": ["src/**/__tests__/*"],
   "compilerOptions": {
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
-
+    "types": ["@tdesign-vue-next/chat/global"],
     "paths": {
       "@/*": ["./src/*"]
     }

@@ -4,6 +4,8 @@ import './assets/main.css'
 import 'virtual:uno.css'
 import 'mapbox-gl/dist/mapbox-gl.css'
 import "cesium/Build/Cesium/Widgets/widgets.css";
+//import 'tdesign-vue-next/es/style/index.css';
+import '@tdesign-vue-next/chat/es/style/index.css';
 
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'

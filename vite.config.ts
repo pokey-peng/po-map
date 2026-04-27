@@ -10,6 +10,7 @@ import { PrimeVueResolver } from 'unplugin-vue-components/resolvers'
 import Components from 'unplugin-vue-components/vite'
 import viteCompression from 'vite-plugin-compression'
 import { visualizer } from 'rollup-plugin-visualizer'
+import { TDesignResolver } from '@tdesign-vue-next/auto-import-resolver';
 
 // https://vite.dev/config/
 export default defineConfig(({ mode, isPreview }) => {
@@ -33,13 +34,13 @@ export default defineConfig(({ mode, isPreview }) => {
         ],
         dts: 'src/auto-imports.d.ts', // 配置文件生成位置
         imports: ['vue', 'vue-router', 'pinia', 'vue-i18n', '@vueuse/core'],
-        resolvers: [PrimeVueResolver()],
+        resolvers: [PrimeVueResolver(), TDesignResolver({ library: 'chat' })],
         vueTemplate: true,
       }),
 
       Components({
         dts: 'src/components.d.ts', // 配置文件生成位置
-        resolvers: [PrimeVueResolver()],
+        resolvers: [PrimeVueResolver(), TDesignResolver({ library: 'chat' })],
         extensions: ['vue'],
       }),
     ],
