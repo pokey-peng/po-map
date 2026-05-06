@@ -101,5 +101,12 @@ export const mapRoutes = [
     label: "WebGL多程序",
     icon: "i-mdi-cube-outline",
     component: () => import('@/views/webgl/webgl-multi-programs.vue'),
+  },
+  {
+    path: '/webgl-framebuffer',
+    name: 'WebglFramebuffer',
+    label: "WebGL渲染到纹理",
+    icon: "i-mdi-cube-outline",
+    component: () => import('@/views/webgl/webgl-framebufferobject.vue'),
   }
 ]

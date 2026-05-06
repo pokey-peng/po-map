@@ -7,7 +7,7 @@ import content from '@/layout/main/content.vue'
 <template>
   <div class="layout">
     <topbar />
-    <main>
+    <main class="overflow-hidden">
       <!--侧边栏-->
       <sidebar />
       <!--主体内容-->

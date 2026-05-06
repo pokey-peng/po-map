@@ -4,8 +4,8 @@ const toggleDark = useToggle(isDark)
 </script>
 
 <template>
-  <header class="dark:bg-black dark:text-white max-h-[20vh] p-2">
-    <div class="header-wrapper flex justify-center items-center h-20">
+  <header class="dark:bg-black dark:text-white p-2">
+    <div class="header-wrapper flex justify-center items-center h-10">
       <img alt="Vue logo" class="logo w-[100%] h-[100%]" src="@/assets/logo.svg" />
       <div class="right-btn flex justify-center items-center pr-4">
         <Button

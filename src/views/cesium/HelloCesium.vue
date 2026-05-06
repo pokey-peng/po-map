@@ -57,7 +57,6 @@ function initGlobalCesium() {
       outlineColor: Cesium.Color.BLACK,
     },
   })
-
   viewer.entities.add({
     name: 'Yellow box outline',
     position: Cesium.Cartesian3.fromDegrees(123.4, 31.0, 300000.0),

@@ -13,6 +13,7 @@ export function initRenderState(canvas: HTMLCanvasElement) {
   gl.enable(gl.DEPTH_TEST)
   gl.enable(gl.POLYGON_OFFSET_FILL)
   gl.enable(gl.BLEND)
+  gl.enable(gl.CULL_FACE)
   gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
   gl.clearColor(0, 0, 0, 1)
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)

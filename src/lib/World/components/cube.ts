@@ -1,4 +1,4 @@
-import { BoxGeometry, Mesh, MeshStandardMaterial } from "three";
+import { BoxGeometry, SphereGeometry, Mesh, MeshStandardMaterial, TextureLoader } from "three";
 import { MathUtils } from "three";
 import type { Mesh as MeshType } from "three";
 interface MeshWithTick extends MeshType {
@@ -6,7 +6,8 @@ interface MeshWithTick extends MeshType {
 }
 function createCube() {
   const geometry = new BoxGeometry(2, 2, 2)
-  const material = new MeshStandardMaterial({ color: 'orchid' })
+  //const geometry = new SphereGeometry(2)
+  const material = createMaterial()
   const cube: MeshWithTick = new Mesh(geometry, material)
   const radian = MathUtils.degToRad(30)
   let translateX = 0.5;
@@ -17,11 +18,24 @@ function createCube() {
     if (currentX <= translateRange[0] || currentX >= translateRange[1]) {
       translateX = -1 * translateX
     }
-    console.log('translateX', currentX)
     const moveDistance = translateX * delta
     cube.position.x += moveDistance;
   }
   return cube
 }
 
+function createMaterial() {
+  const textureLoader = new TextureLoader()
+  const texture = textureLoader.load('/imgs/texture/uv-test-bw.png')
+  const texture2 = textureLoader.load('/imgs/texture/uv-test-col.png')
+  console.log('texture', texture)
+  const material = new MeshStandardMaterial({
+    color: 'white',
+    map: texture,
+    alphaMap: texture2,
+    transparent: true,
+  })
+
+  return material
+}
 export { createCube }
